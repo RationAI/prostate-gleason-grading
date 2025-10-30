@@ -7,7 +7,7 @@ from omegaconf import DictConfig, OmegaConf
 from rationai.mlkit import Trainer, autolog
 
 from project_name.data import DataModule
-from project_name.meta_artch import MetaArch
+from project_name.meta_arch import MetaArch
 
 
 OmegaConf.register_new_resolver(
