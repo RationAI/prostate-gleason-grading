@@ -1,0 +1,9 @@
+# @package _global_
+
+defaults:
+  - base
+  - _self_
+
+level: ???
+output_path: ???
+max_concurrent: ???
