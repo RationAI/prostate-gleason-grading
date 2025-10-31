@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any, cast
 
 import hydra
@@ -44,34 +45,28 @@ def main(config: DictConfig, logger: Logger | None = None) -> None:
     assert logger is not None, "Need logger"
     logger = cast("MLFlowLogger", logger)
 
-    tissue_mask_path = Path(config.output_path, config.artifact_paths.tissue_masks)
-    tissue_mask_path.mkdir(exist_ok=True, parents=True)
-    processing_results_path = Path(
-        config.output_path, config.artifact_paths.processing_results
-    )
+    with TemporaryDirectory() as tissue_mask_dir, TemporaryDirectory() as processing_results_dir:
+        slides = ray.data.read_csv(config.data_path)
+        slides = slides.add_column(
+            "level", lambda _: config.level, num_cpus=0.1, memory=128 * 1024**2
+        )
+        slides = slides.map(
+            process_slide,
+            fn_kwargs={"output_path": Path(tissue_mask_dir)},
+            num_cpus=1,
+            memory=3 * 1024**3,
+            max_retries=2,
+            retry_exceptions=True,
+        )
+        slides.write_parquet(processing_results_dir)
 
-    slides = ray.data.read_csv(config.data_path)
-    slides = slides.add_column(
-        "level", lambda _: config.level, num_cpus=0.1, memory=128 * 1024**2
-    )
-    slides = slides.map(
-        process_slide,
-        fn_kwargs={"output_path": tissue_mask_path},
-        num_cpus=1,
-        memory=1 * 1024**3,
-        max_retries=2,
-        retry_exceptions=True,
-    )
-    slides.write_parquet(str(processing_results_path))
-
-    logger.log_artifacts(
-        local_dir=str(tissue_mask_path),
-        artifact_path=config.artifact_paths.tissue_masks,
-    )
-    logger.log_artifacts(
-        local_dir=str(processing_results_path),
-        artifact_path=config.artifact_paths.processing_results,
-    )
+        logger.log_artifacts(
+            local_dir=tissue_mask_dir, artifact_path=config.artifact_paths.tissue_masks
+        )
+        logger.log_artifacts(
+            local_dir=processing_results_dir,
+            artifact_path=config.artifact_paths.processing_results,
+        )
 
 
 if __name__ == "__main__":
