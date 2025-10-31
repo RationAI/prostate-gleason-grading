@@ -13,6 +13,7 @@ from rationai.masks import slide_resolution, tissue_mask, write_big_tiff
 from rationai.mlkit import autolog
 from rationai.mlkit.lightning.loggers import MLFlowLogger
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -45,7 +46,10 @@ def main(config: DictConfig, logger: Logger | None = None) -> None:
     assert logger is not None, "Need logger"
     logger = cast("MLFlowLogger", logger)
 
-    with TemporaryDirectory() as tissue_mask_dir, TemporaryDirectory() as processing_results_dir:
+    with (
+        TemporaryDirectory() as tissue_mask_dir,
+        TemporaryDirectory() as processing_results_dir,
+    ):
         slides = ray.data.read_csv(config.data_path)
         slides = slides.add_column(
             "level", lambda _: config.level, num_cpus=0.1, memory=128 * 1024**2
