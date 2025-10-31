@@ -7,7 +7,7 @@ from rationai.mlkit import autolog
 from rationai.mlkit.lightning.loggers import MLFlowLogger
 
 
-@hydra.main(config_path="./configs", config_name="preproessing", version_base=None)
+@hydra.main(config_path="./configs", config_name="preproessing/tiling", version_base=None)
 @autolog
 def main(config: DictConfig, logger: Logger | None = None) -> None:
     assert logger is not None, "Need logger"

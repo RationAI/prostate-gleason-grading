@@ -21,13 +21,13 @@ This project provides a machine learning quickstart template using PyTorch Light
 
 This project uses [Hydra](https://hydra.cc/) for configuration management.
 
--   Configuration files are located in the [`configs/`](/Users/matejpekar/Documents/RationAI/machine-learning/configs) directory.
--   The main configuration file is [`configs/project_name.yaml`](/Users/matejpekar/Documents/RationAI/machine-learning/configs/default.yaml).
+-   Configuration files are located in the [`configs/`](configs) directory.
+-   The main configuration file is [`configs/project_name.yaml`](configs/default.yaml).
 -   You can override configuration parameters directly from the command line. For example, to change the batch size:
     ```bash
     uv run python +m <project_name> mode=fit data.batch_size=64
     ```
--   MLflow is configured as the default logger (see [`configs/default.yaml`](/Users/matejpekar/Documents/RationAI/machine-learning/configs/default.yaml)). Ensure your MLflow tracking server is running or configure it accordingly.
+-   MLflow is configured as the default logger (see [`configs/default.yaml`](configs/default.yaml)). Ensure your MLflow tracking server is running or configure it accordingly.
 
 ## Usage
 

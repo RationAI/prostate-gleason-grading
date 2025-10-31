@@ -4,4 +4,9 @@ defaults:
   - /default
   - _self_
 
-data_path: ???
+src_path: foo
+dest_path: foo
+
+metadata:
+  run_name: Tiling
+  description: ???

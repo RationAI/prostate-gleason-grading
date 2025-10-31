@@ -171,7 +171,7 @@ def main(config: DictConfig, logger: Logger | None = None) -> None:
     semaphore = asyncio.Semaphore(config.request_limit)
 
     with tempfile.TemporaryDirectory(
-        prefix="qc_masks_report_", dir=Path(prostate_cancer_path).as_posix()
+        prefix="qc_masks_report_", dir=output_path.as_posix()
     ) as tmp_dir:  # Create a temporary directory for the report
         report_path = Path(tmp_dir) / "report.html"
 
