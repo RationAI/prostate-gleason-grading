@@ -4,8 +4,6 @@ from pathlib import Path
 from typing import Any, cast
 
 import hydra
-import mlflow
-import pandas as pd
 from aiohttp import ClientSession, ClientTimeout
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
@@ -164,16 +162,14 @@ def main(config: DictConfig, logger: Logger | None = None) -> None:
     output_path = Path(config.output_path)
     output_path.mkdir(exist_ok=True, parents=True)
 
-    slides: list[Path] = ... # Load slide paths
+    slides: list[Path] = ...  # Load slide paths
 
     semaphore = asyncio.Semaphore(config.request_limit)
 
     with tempfile.TemporaryDirectory(
         prefix="qc_masks_report_", dir=output_path.as_posix()
     ) as tmp_dir:  # Create a temporary directory for the report
-        report_path = Path(tmp_dir) / "report.html"
-
-        output_path.mkdir(parents=True, exist_ok=True)
+        report_path = Path(tmp_dir, "report.html")
         report_path.parent.mkdir(parents=True, exist_ok=True)
 
         asyncio.run(

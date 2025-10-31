@@ -4,8 +4,7 @@ defaults:
   - /default
   - _self_
 
-src_path: foo
-dest_path: foo
+artifact_path: ???
 
 metadata:
   run_name: Tiling

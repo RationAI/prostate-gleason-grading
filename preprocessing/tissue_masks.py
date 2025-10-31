@@ -1,5 +1,6 @@
+import logging
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import hydra
 import pyvips
@@ -8,34 +9,29 @@ from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 from openslide import OpenSlide
 from rationai.masks import slide_resolution, tissue_mask, write_big_tiff
-from rationai.masks.processing import process_items
 from rationai.mlkit import autolog
 from rationai.mlkit.lightning.loggers import MLFlowLogger
-from ray._private.worker import RemoteFunction0
+
+logger = logging.getLogger(__name__)
 
 
-def process_slide(slide_path: Path, level: int, output_path: Path) -> None:
-    with OpenSlide(slide_path) as slide:
-        mpp_x, mpp_y = slide_resolution(slide, level=level)
+def process_slide(row: dict[str, Any], output_path: Path) -> dict[str, Any]:
+    try:
+        with OpenSlide(row["path"]) as slide:
+            mpp_x, mpp_y = slide_resolution(slide, level=row["level"])
 
-    slide = cast("pyvips.Image", pyvips.Image.new_from_file(slide_path, level=level))
-    mask = tissue_mask(slide, mpp=mpp_x)
-    mask_path = output_path / slide_path.with_suffix(".tiff").name
+        slide = cast(
+            "pyvips.Image", pyvips.Image.new_from_file(row["path"], level=row["level"])
+        )
+    except Exception as e:
+        logger.error(f"Failed to process slide {row['path']}: {e}", exc_info=True)
+        return {"error": e, **row}
+
+    mask = tissue_mask(slide, mpp=(mpp_x + mpp_y) / 2)
+    mask_path = output_path / Path(row["path"]).with_suffix(".tiff").name
 
     write_big_tiff(mask, path=mask_path, mpp_x=mpp_x, mpp_y=mpp_y)
-
-
-def make_remote_process_slide(
-    level: int, output_path: Path
-) -> RemoteFunction0[None, Path]:
-    @ray.remote
-    def remote_process_slide(slide_path: Path) -> None:
-        try:
-            process_slide(slide_path, level, output_path)
-        except Exception as e:
-            print(f"Error processing slide {slide_path}: {e}")
-
-    return remote_process_slide
+    return {"error": None, **row}
 
 
 @hydra.main(
@@ -48,23 +44,33 @@ def main(config: DictConfig, logger: Logger | None = None) -> None:
     assert logger is not None, "Need logger"
     logger = cast("MLFlowLogger", logger)
 
-    output_path = Path(config.output_path)
-    output_path.mkdir(exist_ok=True, parents=True)
-
-    remote_process_slide = make_remote_process_slide(config.level, output_path)
-
-    slides_path = Path(config.data_path).rglob("*.mrxs")
-
-    process_items(
-        slides_path,
-        process_item=remote_process_slide,
-        max_concurrent=config.max_concurrent,
+    tissue_mask_path = Path(config.output_path, config.artifact_paths.tissue_masks)
+    tissue_mask_path.mkdir(exist_ok=True, parents=True)
+    processing_results_path = Path(
+        config.output_path, config.artifact_paths.processing_results
     )
 
-    logger.experiment.log_artifacts(
-        run_id=logger.run_id,
-        local_dir=str(output_path),
-        artifact_path="tissue_masks",
+    slides = ray.data.read_csv(config.data_path)
+    slides = slides.add_column(
+        "level", lambda _: config.level, num_cpus=0.1, memory=128 * 1024**2
+    )
+    slides = slides.map(
+        process_slide,
+        fn_kwargs={"output_path": tissue_mask_path},
+        num_cpus=1,
+        memory=1 * 1024**3,
+        max_retries=2,
+        retry_exceptions=True,
+    )
+    slides.write_parquet(str(processing_results_path))
+
+    logger.log_artifacts(
+        local_dir=str(tissue_mask_path),
+        artifact_path=config.artifact_paths.tissue_masks,
+    )
+    logger.log_artifacts(
+        local_dir=str(processing_results_path),
+        artifact_path=config.artifact_paths.processing_results,
     )
 
 

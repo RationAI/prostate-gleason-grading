@@ -6,4 +6,11 @@ defaults:
 
 level: ???
 output_path: ???
-max_concurrent: ???
+
+artifact_paths:
+  tissue_masks: tissue_masks
+  processing_results: processing_results
+
+metadata:
+  run_name: Tissue Masks
+  description: ???
