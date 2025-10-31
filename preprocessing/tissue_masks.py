@@ -48,11 +48,10 @@ def main(config: DictConfig, logger: Logger | None = None) -> None:
     assert logger is not None, "Need logger"
     logger = cast("MLFlowLogger", logger)
 
-    level = config.level
     output_path = Path(config.output_path)
     output_path.mkdir(exist_ok=True, parents=True)
 
-    remote_process_slide = make_remote_process_slide(level, output_path)
+    remote_process_slide = make_remote_process_slide(config.level, output_path)
 
     slides_path = Path(config.data_path).rglob("*.mrxs")
 
