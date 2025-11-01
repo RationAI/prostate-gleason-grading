@@ -9,6 +9,7 @@ from rationai.mlkit.lightning.loggers import MLFlowLogger
 from project_name.data import DataModule
 from project_name.meta_arch import MetaArch
 
+
 OmegaConf.register_new_resolver(
     "random_seed", lambda: randint(0, 2**31), use_cache=True
 )
