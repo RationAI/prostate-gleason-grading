@@ -1,11 +1,10 @@
 import asyncio
 import tempfile
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import hydra
 from aiohttp import ClientSession, ClientTimeout
-from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 from rationai.mlkit.autolog import autolog
 from rationai.mlkit.lightning.loggers import MLFlowLogger
@@ -155,10 +154,7 @@ async def qc_main(
 
 @hydra.main(config_path="../configs", config_name="preprocessing/qc", version_base=None)
 @autolog
-def main(config: DictConfig, logger: Logger | None = None) -> None:
-    assert logger is not None, "Need logger"
-    logger = cast("MLFlowLogger", logger)
-
+def main(config: DictConfig, logger: MLFlowLogger) -> None:
     output_path = Path(config.output_path)
     output_path.mkdir(exist_ok=True, parents=True)
 

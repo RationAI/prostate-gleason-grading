@@ -2,13 +2,12 @@ from random import randint
 
 import hydra
 from lightning import seed_everything
-from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig, OmegaConf
 from rationai.mlkit import Trainer, autolog
+from rationai.mlkit.lightning.loggers import MLFlowLogger
 
 from project_name.data import DataModule
 from project_name.meta_arch import MetaArch
-
 
 OmegaConf.register_new_resolver(
     "random_seed", lambda: randint(0, 2**31), use_cache=True
@@ -17,7 +16,7 @@ OmegaConf.register_new_resolver(
 
 @hydra.main(config_path="../configs", config_name="project_name", version_base=None)
 @autolog
-def main(config: DictConfig, logger: Logger | None) -> None:
+def main(config: DictConfig, logger: MLFlowLogger) -> None:
     seed_everything(config.seed, workers=True)
 
     data = hydra.utils.instantiate(
