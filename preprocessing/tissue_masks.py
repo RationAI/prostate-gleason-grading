@@ -18,7 +18,7 @@ def process_slide(slide_path: Path, level: int, output_path: Path) -> None:
         mpp_x, mpp_y = slide_resolution(slide, level=level)
 
     slide = cast("pyvips.Image", pyvips.Image.new_from_file(slide_path, level=level))
-    mask = tissue_mask(slide, mpp=mpp_x)
+    mask = tissue_mask(slide, mpp=(mpp_x + mpp_y) / 2)
     mask_path = output_path / slide_path.with_suffix(".tiff").name
 
     write_big_tiff(mask, path=mask_path, mpp_x=mpp_x, mpp_y=mpp_y)
