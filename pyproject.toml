@@ -10,6 +10,7 @@ dependencies = [
     "lightning>=2.4.0",
     "torchmetrics>=1.4.1",
     "rationai-mlkit>=0.2.0",
+    "mlflow<3.0",
 ]
 
 [tool.uv.sources]
