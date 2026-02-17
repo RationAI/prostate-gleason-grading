@@ -1,0 +1,11 @@
+# @package _global_
+
+dataset:
+  name: ???
+  mlflow_uris:
+    tiling_sources: ???
+
+
+metadata:
+  run_name: Concatenation of tilings -- ${dataset.name}
+  description: Concatenation of the ${dataset.name} dataset tilings

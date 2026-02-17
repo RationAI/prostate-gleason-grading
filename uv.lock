@@ -1560,6 +1560,7 @@ dependencies = [
     { name = "mlflow" },
     { name = "rationai-mlkit" },
     { name = "rationai-sdk" },
+    { name = "rationai-tiling" },
     { name = "torch" },
     { name = "torchmetrics" },
 ]
@@ -1582,6 +1583,7 @@ requires-dist = [
     { name = "rationai-kube-jobs", marker = "extra == 'job'", git = "ssh://git@gitlab.ics.muni.cz/rationai/infrastructure/kube-jobs" },
     { name = "rationai-mlkit", git = "https://gitlab.ics.muni.cz/rationai/digital-pathology/libraries/mlkit.git" },
     { name = "rationai-sdk", git = "https://gitlab.ics.muni.cz/rationai/infrastructure/rationai-sdk-python.git" },
+    { name = "rationai-tiling", git = "https://gitlab.ics.muni.cz/rationai/digital-pathology/libraries/tiling.git" },
     { name = "torch", specifier = ">=2.9.0" },
     { name = "torchmetrics", specifier = ">=1.4.1" },
 ]
@@ -1925,6 +1927,21 @@ dependencies = [
     { name = "numpy" },
     { name = "pillow" },
     { name = "tenacity" },
+]
+
+[[package]]
+name = "rationai-tiling"
+version = "1.1.1"
+source = { git = "https://gitlab.ics.muni.cz/rationai/digital-pathology/libraries/tiling.git#475e7938e9a7230b378fca1c67106eda84f69c85" }
+dependencies = [
+    { name = "mlflow" },
+    { name = "numpy" },
+    { name = "openslide-python" },
+    { name = "pandas" },
+    { name = "pyvips" },
+    { name = "rationai-masks" },
+    { name = "ray" },
+    { name = "tqdm" },
 ]
 
 [[package]]

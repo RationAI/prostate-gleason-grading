@@ -1,0 +1,16 @@
+# @package _global_
+
+dataset:
+  name: ???
+  mlflow_uris:
+    tiling_with_gs: ???
+
+# list of Gleason scores for which to keep slides and tiles
+gleason_scores_to_keep:
+  - "3+3"
+  - "4+4"
+  - "4+5"
+
+metadata:
+  run_name: Filtering GS -- ${dataset.name}
+  description: The ${dataset.name} dataset enhanced by gleason score and filtered to keep only slides and corresponding tiles with ${gleason_scores_to_keep}

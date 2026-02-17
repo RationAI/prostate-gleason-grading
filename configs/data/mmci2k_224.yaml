@@ -1,0 +1,11 @@
+# @package _global_
+
+dataset:
+  name: MMCI 2k 224
+  mlflow_uris:
+    tiling: ???
+    tiling_with_gs: ???
+    tiling_sources:
+      - "mlflow-artifacts:/65/05cbc53468d24748938a1e645bfbe0fe/artifacts/MMCI SL Group 1 224"
+      - "mlflow-artifacts:/65/4be5807467e74794b103dfd8a2b00e1f/artifacts/MMCI SL Group 2 224"
+    annotations_source: "mlflow-artifacts:/65/c363eaa5036845d58c164d955187aba9/artifacts/mmci_2k_prostate.csv"

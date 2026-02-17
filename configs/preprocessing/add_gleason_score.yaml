@@ -1,0 +1,11 @@
+# @package _global_
+
+dataset:
+  name: ???
+  mlflow_uris:
+    tiling: ???
+    annotations_source: ???
+
+metadata:
+  run_name: GS annotations -- ${dataset.name}
+  description: The ${dataset.name} dataset enhanced by Gleason score
