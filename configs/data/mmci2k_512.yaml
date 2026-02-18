@@ -3,7 +3,7 @@
 dataset:
   name: MMCI 2k 512
   mlflow_uris:
-    tiling: ???
+    tiling: "mlflow-artifacts:/105/2ca03a6766354ce4b5209c5ac1712afd/artifacts/MMCI 2k 512"
     tiling_with_gs: ???
     tiling_sources:
       - "mlflow-artifacts:/65/ba747c14ca6f4a6991b18f2fd9beda10/artifacts/MMCI SL Group 1 512"
