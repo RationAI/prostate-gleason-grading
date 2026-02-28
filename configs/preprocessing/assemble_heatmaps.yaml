@@ -1,0 +1,11 @@
+# @package _global_
+
+dataset:
+  name: ???
+  mlflow_uris:
+    tiling_with_gs_filtered: ???
+    cancer_prediction_table: ???
+
+metadata:
+  run_name: Cancer prediction heatmaps -- ${dataset.name}
+  description: Cancer prediction heatmaps for the ${dataset.name} dataset
