@@ -10,7 +10,9 @@ from rationai.mlkit import autolog, with_cli_args
 from rationai.mlkit.lightning.loggers import MLFlowLogger
 
 
-def assemble_heatmap(slide: pd.Series, tiles_df: pd.DataFrame, save_dir: Path) -> None:
+def assemble_heatmap(
+    slide: pd.Series, predictions: pd.DataFrame, save_dir: Path
+) -> None:
 
     mask_builder = ScalarMaskBuilder(
         save_dir=save_dir,
@@ -24,9 +26,9 @@ def assemble_heatmap(slide: pd.Series, tiles_df: pd.DataFrame, save_dir: Path) -
     )
 
     mask_builder.update(
-        torch.tensor(tiles_df["prediction"].values),
-        torch.tensor(tiles_df["x"].values),
-        torch.tensor(tiles_df["y"].values),
+        torch.tensor(predictions["prediction"].values),
+        torch.tensor(predictions["x"].values),
+        torch.tensor(predictions["y"].values),
     )
 
     path = mask_builder.save()
@@ -47,27 +49,17 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         orient="split",
     )
 
-    tiling_uri = config.dataset.mlflow_uris.tiling_with_gs_filtered
     slides_df = pd.read_parquet(
-        mlflow.artifacts.download_artifacts(tiling_uri + "/slides.parquet")
-    )
-    tiles_df = pd.read_parquet(
-        mlflow.artifacts.download_artifacts(tiling_uri + "/tiles.parquet")
-    )
-
-    table = table.join(slides_df.set_index("stem")["id"], on="slide", how="left")
-
-    tiles_df = tiles_df.join(
-        table.set_index(["id", "x", "y"])["prediction"],
-        on=["slide_id", "x", "y"],
-        how="right",
+        mlflow.artifacts.download_artifacts(
+            config.dataset.mlflow_uris.tiling_with_gs_filtered + "/slides.parquet"
+        )
     )
 
     tmp_dir = Path("tmp_dir")
     tmp_dir.mkdir(exist_ok=True)
 
     for _, slide in slides_df.iterrows():
-        assemble_heatmap(slide, tiles_df[tiles_df.slide_id == slide.id], tmp_dir)
+        assemble_heatmap(slide, table[table.slide == slide.stem], tmp_dir)
 
 
 if __name__ == "__main__":
