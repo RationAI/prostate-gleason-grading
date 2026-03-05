@@ -1,4 +1,4 @@
-from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import hydra
 import mlflow
@@ -11,7 +11,7 @@ from rationai.mlkit.lightning.loggers import MLFlowLogger
 
 
 def assemble_heatmap(
-    slide: pd.Series, predictions: pd.DataFrame, save_dir: Path
+    slide: pd.Series, predictions: pd.DataFrame, save_dir: str
 ) -> None:
 
     mask_builder = ScalarMaskBuilder(
@@ -31,11 +31,7 @@ def assemble_heatmap(
         torch.tensor(predictions["y"].values),
     )
 
-    path = mask_builder.save()
-
-    mlflow.log_artifact(str(path), artifact_path="heatmaps")
-
-    path.unlink()
+    mlflow.log_artifact(str(mask_builder.save()), artifact_path="heatmaps")
 
 
 @with_cli_args(["+preprocessing=assemble_heatmaps"])
@@ -55,11 +51,9 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         )
     )
 
-    tmp_dir = Path("tmp_dir")
-    tmp_dir.mkdir(exist_ok=True)
-
-    for _, slide in slides_df.iterrows():
-        assemble_heatmap(slide, table[table.slide == slide.stem], tmp_dir)
+    with TemporaryDirectory() as tmp_dir:
+        for _, slide in slides_df.iterrows():
+            assemble_heatmap(slide, table[table.slide == slide.stem], tmp_dir)
 
 
 if __name__ == "__main__":
