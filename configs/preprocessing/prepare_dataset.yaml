@@ -1,0 +1,20 @@
+# @package _global_
+
+defaults:
+  - filter_by_gleason_score
+  - _self_
+
+dataset:
+  name: ???
+  thresholds:
+    tissue: ???
+    folding: ???
+    blur: ???
+    residual: ???
+  mlflow_uris:
+    tiling_with_gs: ???
+    cancer_prediction_table: ???
+
+metadata:
+  run_name: GS Dataset -- ${dataset.name}
+  description: The ${dataset.name} dataset prepared for GS classification

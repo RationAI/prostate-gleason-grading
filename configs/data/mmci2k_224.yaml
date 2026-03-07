@@ -2,6 +2,11 @@
 
 dataset:
   name: MMCI 2k 224
+  thresholds:
+    tissue: 0.5
+    folding: 0.25
+    blur: 0.25
+    residual: 0.25
   mlflow_uris:
     tiling: "mlflow-artifacts:/105/682b14944f1b416193871333574eb30a/artifacts/MMCI 2k 224"
     tiling_with_gs: "mlflow-artifacts:/105/9ce0b6f561354d0abda21345b5ffe0b9/artifacts/MMCI 2k 224"
