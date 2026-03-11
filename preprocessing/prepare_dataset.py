@@ -27,7 +27,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
     )
 
     negative_slides_df = slides_df[
-        (slides_df.gleason_score.isna()) & (~slides_df.carcinoma)
+        slides_df.gleason_score.isna() & ~slides_df.carcinoma
     ]
     positive_slides_df = slides_df[
         slides_df.gleason_score.isin(config.gleason_scores_to_keep)
@@ -41,8 +41,8 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         & (tiles_df.residual_percentage <= config.dataset.thresholds.residual)
     ]
 
-    negative_tiles_df = tiles_df[tiles_df.slide_id.isin(negative_slides_df.id)]
-    positive_tiles_df = tiles_df[tiles_df.slide_id.isin(positive_slides_df.id)]
+    negative_tiles_df = tiles_df[tiles_df.slide_id.isin(negative_slides_df.id)].copy()
+    positive_tiles_df = tiles_df[tiles_df.slide_id.isin(positive_slides_df.id)].copy()
 
     annotations = annotations.join(slides_df.set_index("stem")["id"], on="slide")
 
@@ -51,8 +51,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         on=["slide_id", "x", "y"],
         how="inner",
     )
-    positive_tiles_df = positive_tiles_df[positive_tiles_df.binary_prediction]
-    positive_tiles_df.drop(["binary_prediction"], axis=1, inplace=True)
+    negative_tiles_df["binary_prediction"] = False
 
     slides_df = pd.concat([positive_slides_df, negative_slides_df])
     tiles_df = pd.concat([positive_tiles_df, negative_tiles_df])
