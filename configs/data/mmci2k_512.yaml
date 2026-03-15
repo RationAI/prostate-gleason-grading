@@ -4,8 +4,9 @@ dataset:
   name: MMCI 2k 512
   mlflow_uris:
     tiling: "mlflow-artifacts:/105/2ca03a6766354ce4b5209c5ac1712afd/artifacts/MMCI 2k 512"
-    tiling_with_gs: "mlflow-artifacts:/105/06e1bdf872394734b4b83442fd35ccae/artifacts/MMCI 2k 512"
+    tiling_with_gs: "mlflow-artifacts:/105/d4e547a1bc454ad2a115d2b6bec64c0f/artifacts/MMCI 2k 512"
+    tiling_with_gs_filtered: "mlflow-artifacts:/105/dfe531211cbd4f53ac3b35d6cc3838ca/artifacts/MMCI 2k 512"
     tiling_sources:
       - "mlflow-artifacts:/65/ba747c14ca6f4a6991b18f2fd9beda10/artifacts/MMCI SL Group 1 512"
       - "mlflow-artifacts:/65/a31f80e863f0461d803ae0027ffed3ae/artifacts/MMCI SL Group 2 512"
-    annotations_source: "mlflow-artifacts:/65/c363eaa5036845d58c164d955187aba9/artifacts/mmci_2k_prostate.csv"
+    annotations_source: "mlflow-artifacts:/65/5a159bf29b034e08a12e9a683f84e752/artifacts/mmci_2k_prostate.csv"

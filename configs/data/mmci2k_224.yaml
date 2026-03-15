@@ -4,10 +4,10 @@ dataset:
   name: MMCI 2k 224
   mlflow_uris:
     tiling: "mlflow-artifacts:/105/682b14944f1b416193871333574eb30a/artifacts/MMCI 2k 224"
-    tiling_with_gs: "mlflow-artifacts:/105/9ce0b6f561354d0abda21345b5ffe0b9/artifacts/MMCI 2k 224"
-    tiling_with_gs_filtered: "mlflow-artifacts:/105/32b176d782b9469da689f40952f4cb47/artifacts/MMCI 2k 224"
+    tiling_with_gs: "mlflow-artifacts:/105/12c1a45b60b0455188f7e05071242a4a/artifacts/MMCI 2k 224"
+    tiling_with_gs_filtered: "mlflow-artifacts:/105/19aeb0eb9fab4637a6542b0afae7ea64/artifacts/MMCI 2k 224"
     tiling_sources:
       - "mlflow-artifacts:/65/05cbc53468d24748938a1e645bfbe0fe/artifacts/MMCI SL Group 1 224"
       - "mlflow-artifacts:/65/4be5807467e74794b103dfd8a2b00e1f/artifacts/MMCI SL Group 2 224"
-    annotations_source: "mlflow-artifacts:/65/c363eaa5036845d58c164d955187aba9/artifacts/mmci_2k_prostate.csv"
-    cancer_prediction_table: "mlflow-artifacts:/65/abf4fc95b2384e68bb5118be75710421/artifacts/tables/cancer_prediction_table.json"
+    annotations_source: "mlflow-artifacts:/65/5a159bf29b034e08a12e9a683f84e752/artifacts/mmci_2k_prostate.csv"
+    cancer_prediction_table: "mlflow-artifacts:/65/3152bb5ab5a840b89a61df33ec9689de/artifacts/tables/cancer_prediction_table.json"
