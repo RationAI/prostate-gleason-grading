@@ -61,6 +61,11 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         how="left",
     )
 
+    if slides_df[config.group_column].isna().any():
+        raise ValueError(
+            f"Missing '{config.group_column}' after joining annotations source."
+        )
+
     train, test = train_test_split(
         slides_df,
         stratify=slides_df.gleason_score,
