@@ -9,7 +9,7 @@ submit_job(
     memory="4Gi",
     public=False,
     script=[
-        "git clone https://github.com/RationAI/prostate-gleason-grading.git",
+        "git clone https://github.com/RationAI/prostate-gleason-grading.git workdir",
         "cd workdir",
         "uv sync",
         "uv run -m preprocessing.split_dataset +data=mmci2k_224",
