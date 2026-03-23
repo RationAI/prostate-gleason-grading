@@ -78,13 +78,13 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
 
     save_mlflow_dataset(
         slides=test.drop(config.group_column, axis=1),
-        tiles=tiles_df[tiles_df.slide_id.isin(test.id)],
+        tiles=tiles_df[tiles_df.id.isin(test.id)],
         dataset_name=config.dataset.name + "/test",
     )
 
     save_mlflow_dataset(
         slides=train.drop(config.group_column, axis=1),
-        tiles=tiles_df[tiles_df.slide_id.isin(train.id)],
+        tiles=tiles_df[tiles_df.id.isin(train.id)],
         dataset_name=config.dataset.name + "/train",
     )
 
