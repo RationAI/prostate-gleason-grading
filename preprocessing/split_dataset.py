@@ -43,13 +43,12 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         )
     )
 
-    tiling_uri = config.dataset.mlflow_uris.tiling_done
-    slides_df = pd.read_parquet(
-        mlflow.artifacts.download_artifacts(tiling_uri + "/slides.parquet")
+    tiling_path = mlflow.artifacts.download_artifacts(
+        artifact_uri=config.dataset.mlflow_uris.tiling_done
     )
-    tiles_df = pd.read_parquet(
-        mlflow.artifacts.download_artifacts(tiling_uri + "/tiles.parquet")
-    )
+
+    slides_df = pd.read_parquet(tiling_path + "/slides.parquet")
+    tiles_df = pd.read_parquet(tiling_path + "/tiles.parquet")
 
     # np.unique() called from ratiopath.model_selection.train_test_split
     # cannot handle arrays containing both strings and None values
