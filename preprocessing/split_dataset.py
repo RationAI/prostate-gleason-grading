@@ -72,7 +72,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         train.copy(),
         config.target_column,
         config.group_column,
-        config.folds,
+        config.fold_size,
         config.random_state,
     )
 
