@@ -58,6 +58,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         annotations_source.set_index("slide_path")[config.group_column],
         on="path",
         how="left",
+        validate="one_to_one",
     )
 
     if slides_df[config.group_column].isna().any():
