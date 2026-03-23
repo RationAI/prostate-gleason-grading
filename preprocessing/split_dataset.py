@@ -18,6 +18,7 @@ def stratified_group_k_fold_split(
     random_state: int,
 ) -> pd.DataFrame:
 
+    slides_df = slides_df.copy()
     fold_mask = np.empty(len(slides_df), dtype=int)
 
     sgkf = StratifiedGroupKFold(n_splits=k, shuffle=True, random_state=random_state)
@@ -47,7 +48,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         mlflow.artifacts.download_artifacts(tiling_uri + "/slides.parquet")
     )
     tiles_df = pd.read_parquet(
-        mlflow.artifacts.download_artifacts(tiling_uri + "/slides.parquet")
+        mlflow.artifacts.download_artifacts(tiling_uri + "/tiles.parquet")
     )
 
     # np.unique() called from ratiopath.model_selection.train_test_split
@@ -62,15 +63,15 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
 
     train, test = train_test_split(
         slides_df,
-        stratify=slides_df[config.target_column],
+        stratify=slides_df.gleason_score,
         groups=slides_df[config.group_column],
         test_size=config.test_size / 100,
         random_state=config.random_state,
     )
 
     train = stratified_group_k_fold_split(
-        train.copy(),
-        config.target_column,
+        train,
+        "gleason_score",
         config.group_column,
         config.fold_size,
         config.random_state,
@@ -78,13 +79,13 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
 
     save_mlflow_dataset(
         slides=test.drop(config.group_column, axis=1),
-        tiles=tiles_df[tiles_df.id.isin(test.id)],
+        tiles=tiles_df[tiles_df.slide_id.isin(test.id)],
         dataset_name=config.dataset.name + "/test",
     )
 
     save_mlflow_dataset(
         slides=train.drop(config.group_column, axis=1),
-        tiles=tiles_df[tiles_df.id.isin(train.id)],
+        tiles=tiles_df[tiles_df.slide_id.isin(train.id)],
         dataset_name=config.dataset.name + "/train",
     )
 
