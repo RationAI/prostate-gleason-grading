@@ -6,11 +6,11 @@ dataset:
     tiling_done: ???
     annotations_source: ???
 
-test_size: 20  # percentage of the dataset
+test_size: 0.2
 fold_size: 5
 group_column: "patient_id"
 random_state: 42
 
 metadata:
   run_name: "Splitting -- ${dataset.name}"
-  description: "Splitting ${dataset.name} dataset into test set (${test_size}% of the dataset) and train set (rest of the dataset) which is further divided into ${fold_size} folds. Both train-test and k-fold splits are stratified by gleason score and grouped by ${group_column}."
+  description: "Splitting ${dataset.name} dataset into test set (${test_size} of the dataset) and train set (rest of the dataset) which is further divided into ${fold_size} folds. Both train-test and k-fold splits are stratified by gleason score and grouped by ${group_column}."

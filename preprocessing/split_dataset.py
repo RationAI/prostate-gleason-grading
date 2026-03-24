@@ -70,7 +70,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         slides_df,
         stratify=slides_df.gleason_score,
         groups=slides_df[config.group_column],
-        test_size=config.test_size / 100,
+        test_size=config.test_size,
         random_state=config.random_state,
     )
 
@@ -83,13 +83,13 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
     )
 
     save_mlflow_dataset(
-        slides=test.drop(config.group_column, axis=1),
+        slides=test,
         tiles=tiles_df[tiles_df.slide_id.isin(test.id)],
         dataset_name=config.dataset.name + "/test",
     )
 
     save_mlflow_dataset(
-        slides=train.drop(config.group_column, axis=1),
+        slides=train,
         tiles=tiles_df[tiles_df.slide_id.isin(train.id)],
         dataset_name=config.dataset.name + "/train",
     )
