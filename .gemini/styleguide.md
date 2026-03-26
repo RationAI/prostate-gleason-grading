@@ -1,6 +1,6 @@
 # Gemini Code Assist PR Review Styleguide
 **Repository:** `prostate-gleason-grading` (RationAI)
-**Context:** This is a research-focused machine learning repository dedicated to predicting gleason score in prostate WSIs in digital pathology. 
+**Context:** This is a research-focused machine learning repository dedicated to predicting Gleason score in prostate WSIs in digital pathology. 
 
 ## 🎯 Primary Review Focus
 - **Ignore formatting and linting:** We use `ruff` for formatting/linting and `uv` for package management. Assume CI/CD will catch styling issues. Do not comment on line length, quotes, or basic PEP-8 formatting.
