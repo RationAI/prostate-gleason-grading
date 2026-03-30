@@ -1,0 +1,19 @@
+# @package _global_
+
+defaults:
+  - filter_by_gleason_score
+  - _self_
+
+qc_defective_slides:
+  - "2023_05010-3"
+  - "2023_04498-1"
+  - "2023_06529-10"
+  - "2023_03239-3"
+  - "2022_10004-14"
+  - "2023_00332-6"
+  - "2023_03636-6"
+  - "2022_10464-2"
+
+metadata:
+  run_name: "Dataset -- ${dataset.name}"
+  description: "The ${dataset.name} dataset"
