@@ -6,7 +6,7 @@ submit_job(
     username=...,
     image="cerit.io/rationai/base:2.0.6",
     cpu=1,
-    memory="4Gi",
+    memory="8Gi",
     public=False,
     script=[
         "git clone https://github.com/RationAI/prostate-gleason-grading.git workdir",

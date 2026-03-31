@@ -4,6 +4,10 @@ defaults:
   - filter_by_gleason_score
   - _self_
 
+dataset:
+  mlflow_uris:
+    cancer_prediction_table: ???
+
 qc_defective_slides:
   - "2023_05010-3"
   - "2023_04498-1"

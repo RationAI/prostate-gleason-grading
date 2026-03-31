@@ -29,6 +29,32 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
 
     tiles_df = tiles_df[tiles_df.slide_id.isin(slides_df.id)]
 
+    annotations = pd.read_json(
+        mlflow.artifacts.download_artifacts(
+            config.dataset.mlflow_uris.cancer_prediction_table
+        ),
+        orient="split",
+    )
+
+    annotations = annotations.join(
+        slides_df[slides_df.carcinoma].set_index("stem")["id"],
+        on="slide",
+        how="inner",
+    )
+
+    # embeddings are only accessible by an index - the row order cannot change
+    tiles_df["_row_order"] = range(len(tiles_df))
+
+    tiles_df = tiles_df.join(
+        annotations.set_index(["id", "x", "y"])["prediction"],
+        on=["slide_id", "x", "y"],
+        how="left",
+    )
+
+    tiles_df = tiles_df.sort_values("_row_order").drop(columns="_row_order")
+
+    tiles_df.prediction = tiles_df.prediction.fillna(0)
+
     save_mlflow_dataset(
         slides=slides_df,
         tiles=tiles_df,
