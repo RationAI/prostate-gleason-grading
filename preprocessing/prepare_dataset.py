@@ -27,7 +27,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         & ~slides_df.stem.isin(config.qc_defective_slides)
     ]
 
-    tiles_df = tiles_df[tiles_df.slide_id.isin(slides_df.id)]
+    tiles_df = tiles_df[tiles_df.slide_id.isin(slides_df.id)].copy()
 
     annotations = pd.read_json(
         mlflow.artifacts.download_artifacts(
@@ -53,7 +53,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
 
     tiles_df = tiles_df.sort_values("_row_order").drop(columns="_row_order")
 
-    tiles_df.prediction = tiles_df.prediction.fillna(0)
+    tiles_df.prediction = tiles_df.prediction.fillna(0.0)
 
     save_mlflow_dataset(
         slides=slides_df,
