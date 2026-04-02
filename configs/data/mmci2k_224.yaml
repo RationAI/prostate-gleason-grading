@@ -6,7 +6,7 @@ dataset:
     tiling: "mlflow-artifacts:/105/682b14944f1b416193871333574eb30a/artifacts/MMCI 2k 224"
     tiling_with_gs: "mlflow-artifacts:/105/12c1a45b60b0455188f7e05071242a4a/artifacts/MMCI 2k 224"
     tiling_with_gs_filtered: "mlflow-artifacts:/105/19aeb0eb9fab4637a6542b0afae7ea64/artifacts/MMCI 2k 224"
-    tiling_done: ???
+    tiling_done: "mlflow-artifacts:/105/40ee274636234c83af333980fb60b80d/artifacts/MMCI 2k 224"
     tiling_sources:
       - "mlflow-artifacts:/65/05cbc53468d24748938a1e645bfbe0fe/artifacts/MMCI SL Group 1 224"
       - "mlflow-artifacts:/65/4be5807467e74794b103dfd8a2b00e1f/artifacts/MMCI SL Group 2 224"
