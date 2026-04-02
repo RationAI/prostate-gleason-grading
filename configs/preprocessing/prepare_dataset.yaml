@@ -1,0 +1,15 @@
+# @package _global_
+
+defaults:
+  - filter_by_gleason_score
+  - _self_
+
+dataset:
+  mlflow_uris:
+    cancer_prediction_table: ???
+
+qc_defective_slides: ???
+
+metadata:
+  run_name: "Dataset -- ${dataset.name}"
+  description: "The ${dataset.name} dataset"
