@@ -1,0 +1,5 @@
+_target_: ml.data.datasets.UnlabeledEmbeddingsSlideDataset
+dataset_uris: ???
+embeddings_dir: ???
+qc_and_tissue_thresholds: ${dataset.thresholds}
+carcinoma_prediction_threshold: null

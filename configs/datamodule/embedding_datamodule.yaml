@@ -1,0 +1,11 @@
+defaults:
+  - datasets@train: embeddings/labeled
+  - datasets@val: embeddings/labeled
+  - datasets@test: embeddings/labeled
+  - datasets@predict: embeddings/unlabeled
+
+_target_: ml.data.data_module.EmbeddingsDataModule
+batch_size: ???
+num_workers: ???
+embeddings_uri: ???
+fold: null
