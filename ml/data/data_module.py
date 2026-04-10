@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import mlflow
 from hydra.utils import instantiate
@@ -29,25 +29,19 @@ class DataModule(LightningDataModule):
 
     def _instantiate_dataset(
         self, mode: str, **dataset_kwargs: Any
-    ) -> MetaTiledSlides[LabeledSample]:
+    ) -> MetaTiledSlides[Any] | None:
 
         if mode == "val" and self.fold is None:
             return None
 
         if mode not in {"val", "train"}:
-            return cast(
-                "MetaTiledSlides[LabeledSample]",
-                instantiate(self.datasets[mode], **dataset_kwargs),
-            )
+            return instantiate(self.datasets[mode], **dataset_kwargs)
 
-        return cast(
-            "MetaTiledSlides[LabeledSample]",
-            instantiate(
-                self.datasets[mode],
-                fold=self.fold,
-                mode=mode,
-                **dataset_kwargs,
-            ),
+        return instantiate(
+            self.datasets[mode],
+            fold=self.fold,
+            mode=mode,
+            **dataset_kwargs,
         )
 
     def setup(self, stage: str, **dataset_kwargs: Any) -> None:
