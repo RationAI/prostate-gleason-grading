@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, TypeVar, cast
+from typing import TypeVar, cast
 
 import numpy as np
 import torch
@@ -17,12 +17,11 @@ T = TypeVar("T", covariant=True)
 class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
     def __init__(
         self,
-        slide: dict[str, Any],
+        slide: str,
         tiles: HFDataset,
-        embeddings_path: str,
+        embeddings_path: Path,
         filtered_indices: np.ndarray,
-        labeled: bool,
-        labels_map: dict[str, int] | None = None,
+        label: torch.Tensor | None = None,
     ) -> None:
 
         super().__init__()
@@ -30,20 +29,16 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
         self.slide = slide
         self.tiles = tiles
         self.filtered_indices = filtered_indices
-        self.embeddings_path = embeddings_path
-        self.labeled = labeled
-        self.labels_map = labels_map
+        self.embeddings_path = str(embeddings_path)
+        self.label = label
 
         self.embeddings: torch.Tensor | None = None
-
-        if self.labeled and self.labels_map is None:
-            raise ValueError("Labels map is expected for labeled dataset.")
 
     def _load_embeddings(self) -> None:
         if self.embeddings is None:
             embeddings = torch.load(self.embeddings_path, map_location="cpu")
             if len(embeddings) != len(self.tiles):
-                raise ValueError(f"Slide {self.slide['stem']}: incompatible embeddings")
+                raise ValueError(f"Slide {self.slide}: incompatible embeddings")
             self.embeddings = embeddings[self.filtered_indices]
 
     def __len__(self) -> int:
@@ -52,7 +47,7 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
     def __getitem__(self, idx: int) -> LabeledSample | UnlabeledSample:
 
         if not 0 <= idx < len(self):
-            raise IndexError(f"Slide {self.slide['stem']}: index out of range")
+            raise IndexError(f"Slide {self.slide}: index out of range")
 
         self._load_embeddings()
 
@@ -60,14 +55,13 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
 
         tile = self.tiles[self.filtered_indices[idx]]
         embedding = self.embeddings[idx]
-        metadata = Metadata(slide=self.slide["stem"], x=tile["x"], y=tile["y"])
+        metadata = Metadata(slide=self.slide, x=tile["x"], y=tile["y"])
 
-        if self.labeled:
-            assert self.labels_map is not None
-            label = torch.tensor(self.labels_map[self.slide["gleason_score"]])
-            return embedding, metadata, label
-
-        return embedding, metadata
+        return (
+            (embedding, metadata, self.label)
+            if self.label is not None
+            else (embedding, metadata)
+        )
 
 
 class EmbeddingsSlideDataset(FilterableDataset[T]):
@@ -112,14 +106,18 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
                 self.slides = self.slides.filter(lambda s: s["fold"] == self.fold)
 
         for slide in self.slides:
+            label = (
+                torch.tensor(self.labels_map[slide["gleason_score"]])
+                if self.labeled
+                else None
+            )
             yield cast(
                 "Dataset[T]",
                 EmbeddingsTileDataset(
-                    slide=slide,
+                    slide=slide["stem"],
                     tiles=self.filter_tiles_by_slide(slide["id"]),
                     filtered_indices=self.indices_of_filtered_tiles(slide),
-                    labeled=self.labeled,
-                    labels_map=self.labels_map,
+                    label=label,
                     embeddings_path=(self.embeddings_dir / slide["stem"]).with_suffix(
                         ".pt"
                     ),

@@ -35,12 +35,7 @@ class FilterableDataset(MetaTiledSlides[T]):
         self.labels_map = (
             labels_map
             if labels_map is not None
-            else {
-                "None": 0,
-                "3+3": 1,
-                "4+4": 2,
-                "4+5": 2,
-            }
+            else {"None": 0, "3+3": 1, "4+4": 2, "4+5": 2}
         )
 
         super().__init__(uris=uris)
