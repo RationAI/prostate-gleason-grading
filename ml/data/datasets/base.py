@@ -25,18 +25,16 @@ class FilterableDataset(MetaTiledSlides[T]):
         self.labeled = carcinoma_prediction_threshold is not None
         self.qc_and_tissue_thresholds = qc_and_tissue_thresholds
         self.carcinoma_prediction_threshold = carcinoma_prediction_threshold
+        self.labels_map = labels_map
+
+        if self.labeled and self.labels_map is None:
+            raise ValueError("Labels map is expected for labeled dataset.")
 
         self._qc_and_tissue_mask: MaskType | None = None
         self._carcinoma_prediction_mask: MaskType | None = None
 
         self.slides: HFDataset
         self.tiles: HFDataset
-
-        self.labels_map = (
-            labels_map
-            if labels_map is not None
-            else {"None": 0, "3+3": 1, "4+4": 2, "4+5": 2}
-        )
 
         super().__init__(uris=uris)
 
@@ -52,6 +50,8 @@ class FilterableDataset(MetaTiledSlides[T]):
                     "Dataset is expected to be labeled but no labels were found."
                 )
 
+            assert self.labels_map is not None
+
             expected_labels = set(self.labels_map.keys())
             found_labels = set(self.slides.unique("gleason_score"))
             unknown_labels = found_labels - expected_labels
@@ -64,7 +64,7 @@ class FilterableDataset(MetaTiledSlides[T]):
 
         table = self.tiles.data.table
 
-        mask = pa.repeat(True, len(table))
+        mask = pa.repeat(pa.scalar(True), len(table))
 
         for column_name, threshold in self.qc_and_tissue_thresholds.items():
             if column_name == "tissue_roi_percentage":

@@ -106,11 +106,12 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
                 self.slides = self.slides.filter(lambda s: s["fold"] == self.fold)
 
         for slide in self.slides:
-            label = (
-                torch.tensor(self.labels_map[slide["gleason_score"]])
-                if self.labeled
-                else None
-            )
+            label = None
+
+            if self.labeled:
+                assert self.labels_map is not None
+                label = torch.tensor(self.labels_map[slide["gleason_score"]])
+
             yield cast(
                 "Dataset[T]",
                 EmbeddingsTileDataset(
