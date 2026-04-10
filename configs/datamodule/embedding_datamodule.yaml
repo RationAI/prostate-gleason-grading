@@ -8,4 +8,4 @@ _target_: ml.data.data_module.EmbeddingsDataModule
 batch_size: ???
 num_workers: ???
 embeddings_uri: ???
-fold: null
+validation_fold: null

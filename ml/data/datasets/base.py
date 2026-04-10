@@ -19,6 +19,7 @@ class FilterableDataset(MetaTiledSlides[T]):
         uris: Iterable[str],
         qc_and_tissue_thresholds: dict[str, float],
         carcinoma_prediction_threshold: float | None,
+        labels_map: dict[str, int] | None = None,
     ) -> None:
 
         self.labeled = carcinoma_prediction_threshold is not None
@@ -31,18 +32,40 @@ class FilterableDataset(MetaTiledSlides[T]):
         self.slides: HFDataset
         self.tiles: HFDataset
 
+        self.labels_map = (
+            labels_map
+            if labels_map is not None
+            else {
+                "None": 0,
+                "3+3": 1,
+                "4+4": 2,
+                "4+5": 2,
+            }
+        )
+
         super().__init__(uris=uris)
 
     def _build_filter_masks(self) -> None:
 
-        if self.labeled and (
-            "gleason_score" not in self.slides.column_names
-            or "carcinoma" not in self.slides.column_names
-            or "prediction" not in self.tiles.column_names
-        ):
-            raise ValueError(
-                "Dataset is expected to be labeled but no labels were found."
-            )
+        if self.labeled:
+            if (
+                "gleason_score" not in self.slides.column_names
+                or "carcinoma" not in self.slides.column_names
+                or "prediction" not in self.tiles.column_names
+            ):
+                raise ValueError(
+                    "Dataset is expected to be labeled but no labels were found."
+                )
+
+            expected_labels = set(self.labels_map.keys())
+            found_labels = set(self.slides.unique("gleason_score"))
+            unknown_labels = found_labels - expected_labels
+
+            if len(unknown_labels) > 0:
+                raise ValueError(
+                    f"Unknown labels: {unknown_labels}. "
+                    f"Expected labels: {expected_labels}."
+                )
 
         table = self.tiles.data.table
 
@@ -54,7 +77,10 @@ class FilterableDataset(MetaTiledSlides[T]):
             elif column_name in table.column_names:
                 mask = pc.and_(mask, pc.less(table[column_name], threshold))
             else:
-                raise ValueError(f"Unknown threshold: {column_name}")
+                raise ValueError(
+                    f"Threshold column '{column_name}' not found in tiles"
+                    f" table. Available columns: {table.column_names}"
+                )
 
         self._qc_and_tissue_mask = mask
 

@@ -22,6 +22,7 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
         embeddings_path: str,
         filtered_indices: np.ndarray,
         labeled: bool,
+        labels_map: dict[str, int] | None = None,
     ) -> None:
 
         super().__init__()
@@ -31,8 +32,12 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
         self.filtered_indices = filtered_indices
         self.embeddings_path = embeddings_path
         self.labeled = labeled
+        self.labels_map = labels_map
 
         self.embeddings: torch.Tensor | None = None
+
+        if self.labeled and self.labels_map is None:
+            raise ValueError("Labels map is expected for labeled dataset.")
 
     def _load_embeddings(self) -> None:
         if self.embeddings is None:
@@ -47,7 +52,7 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
     def __getitem__(self, idx: int) -> LabeledSample | UnlabeledSample:
 
         if not 0 <= idx < len(self):
-            raise ValueError(f"Slide {self.slide['stem']}: index out of range")
+            raise IndexError(f"Slide {self.slide['stem']}: index out of range")
 
         self._load_embeddings()
 
@@ -57,11 +62,12 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
         embedding = self.embeddings[idx]
         metadata = Metadata(slide=self.slide["stem"], x=tile["x"], y=tile["y"])
 
-        return (
-            (embedding, metadata, self.slide["gleason_score"])
-            if self.labeled
-            else (embedding, metadata)
-        )
+        if self.labeled:
+            assert self.labels_map is not None
+            label = torch.tensor(self.labels_map[self.slide["gleason_score"]])
+            return embedding, metadata, label
+
+        return embedding, metadata
 
 
 class EmbeddingsSlideDataset(FilterableDataset[T]):
@@ -73,6 +79,7 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
         carcinoma_prediction_threshold: float | None = None,
         fold: int | None = None,
         mode: str | None = None,
+        labels_map: dict[str, int] | None = None,
     ) -> None:
 
         if fold is not None and mode not in ["train", "val"]:
@@ -88,7 +95,10 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
         self.slides: HFDataset
 
         super().__init__(
-            dataset_uris, qc_and_tissue_thresholds, carcinoma_prediction_threshold
+            dataset_uris,
+            qc_and_tissue_thresholds,
+            carcinoma_prediction_threshold,
+            labels_map,
         )
 
     def generate_datasets(self) -> Iterable[Dataset[T]]:
@@ -109,6 +119,7 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
                     tiles=self.filter_tiles_by_slide(slide["id"]),
                     filtered_indices=self.indices_of_filtered_tiles(slide),
                     labeled=self.labeled,
+                    labels_map=self.labels_map,
                     embeddings_path=(self.embeddings_dir / slide["stem"]).with_suffix(
                         ".pt"
                     ),

@@ -9,7 +9,7 @@ from omegaconf import DictConfig
 from rationai.mlkit.data.datasets import MetaTiledSlides
 from torch.utils.data import DataLoader
 
-from ml.typing import Input, LabeledSample, UnlabeledSample
+from ml.typing import LabeledSample, UnlabeledSample
 
 
 class DataModule(LightningDataModule):
@@ -52,15 +52,19 @@ class DataModule(LightningDataModule):
                         ),
                     )
                 )
-            case "val":
-                self.val = cast(
-                    "MetaTiledSlides[LabeledSample]",
-                    instantiate(
-                        self.datasets["val"],
-                        fold=self.fold,
-                        mode="val",
-                        **dataset_kwargs,
-                    ),
+            case "validate":
+                self.val = (
+                    None
+                    if self.fold is None
+                    else cast(
+                        "MetaTiledSlides[LabeledSample]",
+                        instantiate(
+                            self.datasets["val"],
+                            fold=self.fold,
+                            mode="val",
+                            **dataset_kwargs,
+                        ),
+                    )
                 )
             case "test":
                 self.test = cast(
@@ -73,7 +77,7 @@ class DataModule(LightningDataModule):
                     instantiate(self.datasets["predict"], **dataset_kwargs),
                 )
 
-    def train_dataloader(self) -> Iterable[Input]:
+    def train_dataloader(self) -> Iterable[LabeledSample]:
         return DataLoader(
             self.train,
             batch_size=self.batch_size,
@@ -83,10 +87,10 @@ class DataModule(LightningDataModule):
             persistent_workers=self.num_workers > 0,
         )
 
-    def val_dataloader(self) -> Iterable[Input] | None:
+    def val_dataloader(self) -> Iterable[LabeledSample] | None:
         return (
             None
-            if not self.val
+            if self.val is None
             else DataLoader(
                 self.val,
                 batch_size=self.batch_size,
@@ -95,14 +99,14 @@ class DataModule(LightningDataModule):
             )
         )
 
-    def test_dataloader(self) -> Iterable[Input]:
+    def test_dataloader(self) -> Iterable[LabeledSample]:
         return DataLoader(
             self.test,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
         )
 
-    def predict_dataloader(self) -> Iterable[Input]:
+    def predict_dataloader(self) -> Iterable[UnlabeledSample]:
         return DataLoader(
             self.predict,
             batch_size=self.batch_size,
@@ -126,7 +130,7 @@ class EmbeddingsDataModule(DataModule):
     def prepare_data(self) -> None:
         mlflow.artifacts.download_artifacts(
             self.embeddings_uri,
-            dst_path=self.embeddings_dir.name,
+            dst_path=str(self.embeddings_dir),
         )
 
     def setup(self, stage: str, **dataset_kwargs: Any) -> None:

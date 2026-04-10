@@ -9,6 +9,8 @@ checkpoint: null
 
 trainer: {}
 
+datamodule: {}
+
 data: {}
 
 model: {}

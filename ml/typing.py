@@ -15,12 +15,8 @@ class MetadataBatch(TypedDict):
     y: Tensor
 
 
-type LabeledSample = tuple[Tensor, Metadata, str]
+type LabeledSample = tuple[Tensor, Metadata, Tensor]
 type UnlabeledSample = tuple[Tensor, Metadata]
 
-type LabeledSampleBatch = tuple[Tensor, Tensor, MetadataBatch]
+type LabeledSampleBatch = tuple[Tensor, MetadataBatch, Tensor]
 type UnlabeledSampleBatch = tuple[Tensor, MetadataBatch]
-
-type Input = Tensor
-
-type Outputs = Tensor
