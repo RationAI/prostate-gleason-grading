@@ -27,55 +27,40 @@ class DataModule(LightningDataModule):
         self.fold = validation_fold
         self.datasets = datasets
 
+    def _instantiate_dataset(
+        self, mode: str, **dataset_kwargs: Any
+    ) -> MetaTiledSlides[LabeledSample]:
+
+        if mode == "val" and self.fold is None:
+            return None
+
+        if mode not in {"val", "train"}:
+            return cast(
+                "MetaTiledSlides[LabeledSample]",
+                instantiate(self.datasets[mode], **dataset_kwargs),
+            )
+
+        return cast(
+            "MetaTiledSlides[LabeledSample]",
+            instantiate(
+                self.datasets[mode],
+                fold=self.fold,
+                mode=mode,
+                **dataset_kwargs,
+            ),
+        )
+
     def setup(self, stage: str, **dataset_kwargs: Any) -> None:
         match stage:
             case "fit":
-                self.train = cast(
-                    "MetaTiledSlides[LabeledSample]",
-                    instantiate(
-                        self.datasets["train"],
-                        fold=self.fold,
-                        mode="train",
-                        **dataset_kwargs,
-                    ),
-                )
-                self.val = (
-                    None
-                    if self.fold is None
-                    else cast(
-                        "MetaTiledSlides[LabeledSample]",
-                        instantiate(
-                            self.datasets["val"],
-                            fold=self.fold,
-                            mode="val",
-                            **dataset_kwargs,
-                        ),
-                    )
-                )
+                self.train = self._instantiate_dataset("train", **dataset_kwargs)
+                self.val = self._instantiate_dataset("val", **dataset_kwargs)
             case "validate":
-                self.val = (
-                    None
-                    if self.fold is None
-                    else cast(
-                        "MetaTiledSlides[LabeledSample]",
-                        instantiate(
-                            self.datasets["val"],
-                            fold=self.fold,
-                            mode="val",
-                            **dataset_kwargs,
-                        ),
-                    )
-                )
+                self.val = self._instantiate_dataset("val", **dataset_kwargs)
             case "test":
-                self.test = cast(
-                    "MetaTiledSlides[LabeledSample]",
-                    instantiate(self.datasets["test"], **dataset_kwargs),
-                )
+                self.test = self._instantiate_dataset("test", **dataset_kwargs)
             case "predict":
-                self.predict = cast(
-                    "MetaTiledSlides[UnlabeledSample]",
-                    instantiate(self.datasets["predict"], **dataset_kwargs),
-                )
+                self.predict = self._instantiate_dataset("predict", **dataset_kwargs)
 
     def train_dataloader(self) -> Iterable[LabeledSample]:
         return DataLoader(
