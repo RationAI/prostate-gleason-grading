@@ -58,6 +58,7 @@ class DataModule(LightningDataModule):
                 self.predict = self._instantiate_dataset("predict", **dataset_kwargs)
 
     def train_dataloader(self) -> Iterable[LabeledSample]:
+        assert self.train is not None
         return DataLoader(
             self.train,
             batch_size=self.batch_size,
@@ -80,6 +81,7 @@ class DataModule(LightningDataModule):
         )
 
     def test_dataloader(self) -> Iterable[LabeledSample]:
+        assert self.test is not None
         return DataLoader(
             self.test,
             batch_size=self.batch_size,
@@ -87,6 +89,7 @@ class DataModule(LightningDataModule):
         )
 
     def predict_dataloader(self) -> Iterable[UnlabeledSample]:
+        assert self.predict is not None
         return DataLoader(
             self.predict,
             batch_size=self.batch_size,
