@@ -101,13 +101,14 @@ class EmbeddingsDataModule(DataModule):
         self,
         batch_size: int,
         embeddings_uri: str,
+        embeddings_dir: str,
         num_workers: int = 0,
         validation_fold: int | None = None,
         **datasets: DictConfig,
     ) -> None:
         super().__init__(batch_size, num_workers, validation_fold, **datasets)
         self.embeddings_uri = embeddings_uri
-        self.embeddings_dir = Path("embeddings")
+        self.embeddings_dir = Path(embeddings_dir)
 
     def prepare_data(self) -> None:
         mlflow.artifacts.download_artifacts(
