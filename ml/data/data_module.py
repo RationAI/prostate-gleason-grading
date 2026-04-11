@@ -34,17 +34,15 @@ class DataModule(LightningDataModule):
         if mode == "val" and self.fold is None:
             return None
 
-        if mode in {"train", "val"}:
-            dataset = instantiate(
-                self.datasets[mode], fold=self.fold, mode=mode, **dataset_kwargs
-            )
-        else:
-            dataset = instantiate(self.datasets[mode], **dataset_kwargs)
+        fold = self.fold if mode in {"train", "val"} else None
+        dataset = instantiate(
+            self.datasets[mode], fold=fold, mode=mode, **dataset_kwargs
+        )
 
         return (
-            cast("MetaTiledSlides[LabeledSample]", dataset)
-            if mode == "test"
-            else cast("MetaTiledSlides[UnlabeledSample]", dataset)
+            cast("MetaTiledSlides[UnlabeledSample]", dataset)
+            if mode == "predict"
+            else cast("MetaTiledSlides[LabeledSample]", dataset)
         )
 
     def setup(self, stage: str, **dataset_kwargs: Any) -> None:

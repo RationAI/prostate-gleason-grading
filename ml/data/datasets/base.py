@@ -84,15 +84,15 @@ class FilterableDataset(MetaTiledSlides[T]):
         mask = pa.repeat(pa.scalar(True), len(table))
 
         for column_name, threshold in self.qc_and_tissue_thresholds.items():
-            if column_name == "tissue_roi_percentage":
-                mask = pc.and_(mask, pc.greater(table[column_name], threshold))
-            elif column_name in table.column_names:
-                mask = pc.and_(mask, pc.less(table[column_name], threshold))
-            else:
+            if column_name not in table.column_names:
                 raise ValueError(
                     f"Threshold column '{column_name}' not found in tiles"
                     f" table. Available columns: {table.column_names}"
                 )
+            if column_name == "tissue_roi_percentage":
+                mask = pc.and_(mask, pc.greater(table[column_name], threshold))
+            else:
+                mask = pc.and_(mask, pc.less(table[column_name], threshold))
 
         self._qc_and_tissue_mask = mask
 
