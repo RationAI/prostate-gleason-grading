@@ -19,6 +19,8 @@ class FilterableDataset(MetaTiledSlides[T]):
         uris: Iterable[str],
         qc_and_tissue_thresholds: dict[str, float],
         carcinoma_prediction_threshold: float | None,
+        fold: int | None = None,
+        mode: str | None = None,
         labels_map: dict[str, int] | None = None,
     ) -> None:
 
@@ -30,6 +32,18 @@ class FilterableDataset(MetaTiledSlides[T]):
         if self.labeled and self.labels_map is None:
             raise ValueError("Labels map is expected for labeled dataset.")
 
+        self.fold = fold
+        self.mode = mode
+
+        if self.fold is not None and self.mode not in {"train", "val"}:
+            raise ValueError(
+                f"Invalid mode '{self.mode}': if fold is specified,"
+                f"mode must be one of 'train' or 'val'"
+            )
+
+        if self.mode in {"train", "val", "test"} and not self.labeled:
+            raise ValueError(f"The dataset must be labeled when mode is '{self.mode}'")
+
         self._qc_and_tissue_mask: MaskType | None = None
         self._carcinoma_prediction_mask: MaskType | None = None
 
@@ -38,29 +52,32 @@ class FilterableDataset(MetaTiledSlides[T]):
 
         super().__init__(uris=uris)
 
+    def _check_labels(self) -> None:
+
+        if (
+            "gleason_score" not in self.slides.column_names
+            or "carcinoma" not in self.slides.column_names
+            or "prediction" not in self.tiles.column_names
+        ):
+            raise ValueError(
+                "Dataset is expected to be labeled but no labels were found."
+            )
+
+        assert self.labels_map is not None
+
+        expected_labels = set(self.labels_map.keys())
+        found_labels = set(self.slides.unique("gleason_score"))
+        unknown_labels = found_labels - expected_labels
+
+        if len(unknown_labels) > 0:
+            raise ValueError(
+                f"Unknown labels: {unknown_labels}. Expected labels: {expected_labels}."
+            )
+
     def _build_filter_masks(self) -> None:
 
         if self.labeled:
-            if (
-                "gleason_score" not in self.slides.column_names
-                or "carcinoma" not in self.slides.column_names
-                or "prediction" not in self.tiles.column_names
-            ):
-                raise ValueError(
-                    "Dataset is expected to be labeled but no labels were found."
-                )
-
-            assert self.labels_map is not None
-
-            expected_labels = set(self.labels_map.keys())
-            found_labels = set(self.slides.unique("gleason_score"))
-            unknown_labels = found_labels - expected_labels
-
-            if len(unknown_labels) > 0:
-                raise ValueError(
-                    f"Unknown labels: {unknown_labels}. "
-                    f"Expected labels: {expected_labels}."
-                )
+            self._check_labels()
 
         table = self.tiles.data.table
 
@@ -88,6 +105,16 @@ class FilterableDataset(MetaTiledSlides[T]):
                 mask,
                 carcinoma_prediction_mask,
             )
+
+    def filter_slides_by_fold(self) -> None:
+
+        if self.fold is not None:
+            if self.fold not in self.slides.unique("fold"):
+                raise ValueError(f"Unknown fold: {self.fold}")
+            if self.mode == "train":
+                self.slides = self.slides.filter(lambda s: s["fold"] != self.fold)
+            elif self.mode == "val":
+                self.slides = self.slides.filter(lambda s: s["fold"] == self.fold)
 
     def indices_of_filtered_tiles(self, slide: dict[str, Any]) -> np.ndarray:
 

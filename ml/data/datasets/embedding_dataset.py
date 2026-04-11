@@ -76,14 +76,6 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
         labels_map: dict[str, int] | None = None,
     ) -> None:
 
-        if fold is not None and mode not in ["train", "val"]:
-            raise ValueError(
-                f"Invalid mode '{mode}': if fold is specified,"
-                f"mode must be one of 'train' or 'val'"
-            )
-
-        self.fold = fold
-        self.mode = mode
         self.embeddings_dir = embeddings_dir
 
         self.slides: HFDataset
@@ -92,18 +84,14 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
             dataset_uris,
             qc_and_tissue_thresholds,
             carcinoma_prediction_threshold,
+            fold,
+            mode,
             labels_map,
         )
 
     def generate_datasets(self) -> Iterable[Dataset[T]]:
 
-        if self.fold is not None:
-            if self.fold not in self.slides.unique("fold"):
-                raise ValueError(f"Unknown fold: {self.fold}")
-            if self.mode == "train":
-                self.slides = self.slides.filter(lambda s: s["fold"] != self.fold)
-            elif self.mode == "val":
-                self.slides = self.slides.filter(lambda s: s["fold"] == self.fold)
+        self.filter_slides_by_fold()
 
         for slide in self.slides:
             label = None
