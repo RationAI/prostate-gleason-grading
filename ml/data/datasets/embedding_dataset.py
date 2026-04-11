@@ -35,10 +35,15 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
         self.embeddings: torch.Tensor | None = None
 
     def _load_embeddings(self) -> None:
+
         if self.embeddings is None:
-            embeddings = torch.load(self.embeddings_path, map_location="cpu")
+            embeddings = torch.load(
+                self.embeddings_path, map_location="cpu", weights_only=True
+            )
+
             if len(embeddings) != len(self.tiles):
                 raise ValueError(f"Slide {self.slide}: incompatible embeddings")
+
             self.embeddings = embeddings[self.filtered_indices]
 
     def __len__(self) -> int:
