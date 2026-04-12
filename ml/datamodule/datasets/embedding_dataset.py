@@ -96,6 +96,9 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
 
     def generate_datasets(self) -> Iterable[Dataset[T]]:
 
+        if self.labeled:
+            self._check_labels()
+
         self.filter_slides_by_fold()
 
         for slide in self.slides:

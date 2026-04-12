@@ -76,9 +76,6 @@ class FilterableDataset(MetaTiledSlides[T]):
 
     def _build_filter_masks(self) -> None:
 
-        if self.labeled:
-            self._check_labels()
-
         table = self.tiles.data.table
 
         mask = pa.repeat(pa.scalar(True), len(table))
