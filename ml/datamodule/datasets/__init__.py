@@ -1,4 +1,4 @@
-from ml.data.datasets.embedding_dataset import (
+from ml.datamodule.datasets.embedding_dataset import (
     LabeledEmbeddingsSlideDataset,
     UnlabeledEmbeddingsSlideDataset,
 )

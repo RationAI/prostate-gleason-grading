@@ -7,7 +7,7 @@ import torch
 from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset
 
-from ml.data.datasets.base import FilterableDataset
+from ml.datamodule.datasets.base import FilterableDataset
 from ml.typing import LabeledSample, Metadata, UnlabeledSample
 
 

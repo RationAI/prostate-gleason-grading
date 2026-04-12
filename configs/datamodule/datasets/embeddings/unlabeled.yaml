@@ -1,4 +1,4 @@
-_target_: ml.data.datasets.UnlabeledEmbeddingsSlideDataset
+_target_: ml.datamodule.datasets.UnlabeledEmbeddingsSlideDataset
 dataset_uris: ???
 embeddings_dir: ???
 qc_and_tissue_thresholds: ${dataset.thresholds}
