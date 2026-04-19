@@ -1,8 +1,6 @@
 from collections.abc import Iterable
-from pathlib import Path
-from typing import Any, cast
+from typing import cast
 
-import mlflow
 from hydra.utils import instantiate
 from lightning import LightningDataModule
 from omegaconf import DictConfig
@@ -28,16 +26,14 @@ class DataModule(LightningDataModule):
         self.datasets = datasets
 
     def _instantiate_dataset(
-        self, mode: str, **dataset_kwargs: Any
+        self, mode: str
     ) -> MetaTiledSlides[LabeledSample] | MetaTiledSlides[UnlabeledSample] | None:
 
         if mode == "val" and self.fold is None:
             return None
 
         fold = self.fold if mode in {"train", "val"} else None
-        dataset = instantiate(
-            self.datasets[mode], fold=fold, mode=mode, **dataset_kwargs
-        )
+        dataset = instantiate(self.datasets[mode], fold=fold, mode=mode)
 
         return (
             cast("MetaTiledSlides[UnlabeledSample]", dataset)
@@ -45,17 +41,17 @@ class DataModule(LightningDataModule):
             else cast("MetaTiledSlides[LabeledSample]", dataset)
         )
 
-    def setup(self, stage: str, **dataset_kwargs: Any) -> None:
+    def setup(self, stage: str) -> None:
         match stage:
             case "fit":
-                self.train = self._instantiate_dataset("train", **dataset_kwargs)
-                self.val = self._instantiate_dataset("val", **dataset_kwargs)
+                self.train = self._instantiate_dataset("train")
+                self.val = self._instantiate_dataset("val")
             case "validate":
-                self.val = self._instantiate_dataset("val", **dataset_kwargs)
+                self.val = self._instantiate_dataset("val")
             case "test":
-                self.test = self._instantiate_dataset("test", **dataset_kwargs)
+                self.test = self._instantiate_dataset("test")
             case "predict":
-                self.predict = self._instantiate_dataset("predict", **dataset_kwargs)
+                self.predict = self._instantiate_dataset("predict")
 
     def train_dataloader(self) -> Iterable[LabeledSample]:
         assert self.train is not None
@@ -94,32 +90,4 @@ class DataModule(LightningDataModule):
             self.predict,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
-        )
-
-
-class EmbeddingsDataModule(DataModule):
-    def __init__(
-        self,
-        batch_size: int,
-        embeddings_uri: str,
-        embeddings_dir: str,
-        num_workers: int = 0,
-        validation_fold: int | None = None,
-        **datasets: DictConfig,
-    ) -> None:
-        super().__init__(batch_size, num_workers, validation_fold, **datasets)
-        self.embeddings_uri = embeddings_uri
-        self.embeddings_dir = Path(embeddings_dir)
-
-    def prepare_data(self) -> None:
-        mlflow.artifacts.download_artifacts(
-            self.embeddings_uri,
-            dst_path=str(self.embeddings_dir),
-        )
-
-    def setup(self, stage: str, **dataset_kwargs: Any) -> None:
-        super().setup(
-            stage,
-            embeddings_dir=self.embeddings_dir / Path(self.embeddings_uri).stem,
-            **dataset_kwargs,
         )

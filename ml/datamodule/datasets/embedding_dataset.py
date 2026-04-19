@@ -2,7 +2,6 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TypeVar, cast
 
-import numpy as np
 import torch
 from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset
@@ -19,8 +18,7 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
         self,
         slide: str,
         tiles: HFDataset,
-        embeddings_path: Path,
-        filtered_indices: np.ndarray,
+        embeddings_col: str,
         label: torch.Tensor | None = None,
     ) -> None:
 
@@ -28,38 +26,19 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
 
         self.slide = slide
         self.tiles = tiles
-        self.filtered_indices = filtered_indices
-        self.embeddings_path = str(embeddings_path)
         self.label = label
-
-        self.embeddings: torch.Tensor | None = None
-
-    def _load_embeddings(self) -> None:
-
-        if self.embeddings is None:
-            embeddings = torch.load(
-                self.embeddings_path, map_location="cpu", weights_only=True
-            )
-
-            if len(embeddings) != len(self.tiles):
-                raise ValueError(f"Slide {self.slide}: incompatible embeddings")
-
-            self.embeddings = embeddings[self.filtered_indices]
+        self.embeddings_col = embeddings_col
 
     def __len__(self) -> int:
-        return len(self.filtered_indices)
+        return len(self.tiles)
 
     def __getitem__(self, idx: int) -> LabeledSample | UnlabeledSample:
 
         if not 0 <= idx < len(self):
             raise IndexError(f"Slide {self.slide}: index out of range")
 
-        self._load_embeddings()
-
-        assert self.embeddings is not None
-
-        tile = self.tiles[self.filtered_indices[idx]]
-        embedding = self.embeddings[idx]
+        tile = self.tiles[idx]
+        embedding = torch.tensor(tile[self.embeddings_col])
         metadata = Metadata(slide=self.slide, x=tile["x"], y=tile["y"])
 
         return (
@@ -72,26 +51,26 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
 class EmbeddingsSlideDataset(FilterableDataset[T]):
     def __init__(
         self,
-        dataset_uris: Iterable[str],
-        embeddings_dir: Path,
+        embeddings_col: str,
         qc_and_tissue_thresholds: dict[str, float],
         carcinoma_prediction_threshold: float | None = None,
+        uris: Iterable[str] | None = None,
+        paths: Iterable[Path | str] | None = None,
         fold: int | None = None,
         mode: str | None = None,
         labels_map: dict[str, int] | None = None,
     ) -> None:
 
-        self.embeddings_dir = embeddings_dir
-
-        self.slides: HFDataset
+        self.embeddings_col = embeddings_col
 
         super().__init__(
-            dataset_uris,
-            qc_and_tissue_thresholds,
-            carcinoma_prediction_threshold,
-            fold,
-            mode,
-            labels_map,
+            qc_and_tissue_thresholds=qc_and_tissue_thresholds,
+            carcinoma_prediction_threshold=carcinoma_prediction_threshold,
+            uris=uris,
+            paths=paths,
+            fold=fold,
+            mode=mode,
+            labels_map=labels_map,
         )
 
     def generate_datasets(self) -> Iterable[Dataset[T]]:
@@ -99,9 +78,10 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
         if self.labeled:
             self._check_labels()
 
-        self.filter_slides_by_fold()
+        if self.embeddings_col not in self.tiles.column_names:
+            raise ValueError(f"Embeddings column '{self.embeddings_col}' is missing")
 
-        for slide in self.slides:
+        for slide in self.filter_slides_by_fold():
             label = None
 
             if self.labeled:
@@ -112,12 +92,9 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
                 "Dataset[T]",
                 EmbeddingsTileDataset(
                     slide=slide["stem"],
-                    tiles=self.filter_tiles_by_slide(slide["id"]),
-                    filtered_indices=self.indices_of_filtered_tiles(slide),
+                    tiles=self.filter_tiles_by_slide_and_thresholds(slide),
                     label=label,
-                    embeddings_path=(self.embeddings_dir / slide["stem"]).with_suffix(
-                        ".pt"
-                    ),
+                    embeddings_col=self.embeddings_col,
                 ),
             )
 

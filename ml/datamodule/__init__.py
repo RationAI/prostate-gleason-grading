@@ -1,4 +1,4 @@
-from ml.datamodule.data_module import DataModule, EmbeddingsDataModule
+from ml.datamodule.data_module import DataModule
 
 
-__all__ = ["DataModule", "EmbeddingsDataModule"]
+__all__ = ["DataModule"]

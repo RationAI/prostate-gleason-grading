@@ -4,9 +4,7 @@ defaults:
   - datasets@test: embeddings/labeled
   - datasets@predict: embeddings/unlabeled
 
-_target_: ml.datamodule.data_module.EmbeddingsDataModule
+_target_: ml.datamodule.data_module.DataModule
 batch_size: ???
 num_workers: ???
-embeddings_uri: ???
-embeddings_dir: "embeddings"
 validation_fold: null

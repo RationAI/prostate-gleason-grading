@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from pathlib import Path
 from typing import Any, TypeVar
 
 import numpy as np
@@ -10,15 +11,14 @@ from rationai.mlkit.data.datasets import MetaTiledSlides
 
 T = TypeVar("T", covariant=True)
 
-type MaskType = pa.BooleanArray | pa.ChunkedArray
-
 
 class FilterableDataset(MetaTiledSlides[T]):
     def __init__(
         self,
-        uris: Iterable[str],
         qc_and_tissue_thresholds: dict[str, float],
         carcinoma_prediction_threshold: float | None,
+        uris: Iterable[str] | None = None,
+        paths: Iterable[Path | str] | None = None,
         fold: int | None = None,
         mode: str | None = None,
         labels_map: dict[str, int] | None = None,
@@ -26,7 +26,7 @@ class FilterableDataset(MetaTiledSlides[T]):
 
         self.labeled = carcinoma_prediction_threshold is not None
         self.qc_and_tissue_thresholds = qc_and_tissue_thresholds
-        self.carcinoma_prediction_threshold = carcinoma_prediction_threshold
+        self.prediction_threshold = carcinoma_prediction_threshold
         self.labels_map = labels_map
 
         if self.labeled and self.labels_map is None:
@@ -44,13 +44,16 @@ class FilterableDataset(MetaTiledSlides[T]):
         if self.mode in {"train", "val", "test"} and not self.labeled:
             raise ValueError(f"The dataset must be labeled when mode is '{self.mode}'")
 
-        self._qc_and_tissue_mask: MaskType | None = None
-        self._carcinoma_prediction_mask: MaskType | None = None
+        self._qc_and_tissue_mask: np.ndarray | None = None
+        self._carcinoma_prediction_mask: np.ndarray | None = None
 
         self.slides: HFDataset
         self.tiles: HFDataset
 
-        super().__init__(uris=uris)
+        if (uris is None) == (paths is None):
+            raise ValueError("Exactly one of 'uris' and 'paths' must be provided.")
+
+        super().__init__(uris=uris, paths=paths)
 
     def _check_labels(self) -> None:
 
@@ -91,29 +94,36 @@ class FilterableDataset(MetaTiledSlides[T]):
             else:
                 mask = pc.and_(mask, pc.less(table[column_name], threshold))
 
-        self._qc_and_tissue_mask = mask
+        self._qc_and_tissue_mask = mask.to_numpy(zero_copy_only=False)
 
         if self.labeled:
-            carcinoma_prediction_mask = pc.greater(
-                table["prediction"],
-                self.carcinoma_prediction_threshold,
+            mask = pc.and_(
+                mask, pc.greater(table["prediction"], self.prediction_threshold)
             )
-            self._carcinoma_prediction_mask = pc.and_(
-                mask,
-                carcinoma_prediction_mask,
-            )
+            self._carcinoma_prediction_mask = mask.to_numpy(zero_copy_only=False)
 
-    def filter_slides_by_fold(self) -> None:
+    def filter_slides_by_fold(self) -> HFDataset:
 
         if self.fold is not None:
+            if "fold" not in self.slides.column_names:
+                raise ValueError("Fold filtering requires a 'fold' column in slides.")
             if self.fold not in self.slides.unique("fold"):
                 raise ValueError(f"Unknown fold: {self.fold}")
             if self.mode == "train":
-                self.slides = self.slides.filter(lambda s: s["fold"] != self.fold)
-            elif self.mode == "val":
-                self.slides = self.slides.filter(lambda s: s["fold"] == self.fold)
+                return self.slides.filter(lambda s: s["fold"] != self.fold)
+            if self.mode == "val":
+                return self.slides.filter(lambda s: s["fold"] == self.fold)
 
-    def indices_of_filtered_tiles(self, slide: dict[str, Any]) -> np.ndarray:
+        return self.slides
+
+    def filter_tiles_by_slide_and_thresholds(self, slide: dict[str, Any]) -> HFDataset:
+
+        indices = self._slide_id_to_indices.get(slide["id"])
+
+        if indices is None:
+            return self.tiles.select([])
+
+        np_indices = indices.values.to_numpy()
 
         if self._qc_and_tissue_mask is None:
             self._build_filter_masks()
@@ -126,5 +136,5 @@ class FilterableDataset(MetaTiledSlides[T]):
 
         assert mask is not None
 
-        tiles_range = self._slide_id_to_indices.get(slide["id"], range(0))
-        return pc.indices_nonzero(mask[tiles_range.start : tiles_range.stop]).to_numpy()
+        np_indices = np_indices[mask[np_indices]]
+        return self.tiles.select(np_indices)
