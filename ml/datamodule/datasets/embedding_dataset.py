@@ -38,7 +38,7 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
             raise IndexError(f"Slide {self.slide}: index out of range")
 
         tile = self.tiles[idx]
-        embedding = torch.tensor(tile[self.embeddings_col])
+        embedding = torch.as_tensor(tile[self.embeddings_col])
         metadata = Metadata(slide=self.slide, x=tile["x"], y=tile["y"])
 
         return (
