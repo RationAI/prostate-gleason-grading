@@ -37,7 +37,7 @@ class FilterableDataset(MetaTiledSlides[T]):
 
         if self.fold is not None and self.mode not in {"train", "val"}:
             raise ValueError(
-                f"Invalid mode '{self.mode}': if fold is specified,"
+                f"Invalid mode '{self.mode}': if fold is specified, "
                 f"mode must be one of 'train' or 'val'"
             )
 
@@ -92,7 +92,7 @@ class FilterableDataset(MetaTiledSlides[T]):
             if column_name == "tissue_roi_percentage":
                 mask = pc.and_(mask, pc.greater(table[column_name], threshold))
             else:
-                mask = pc.and_(mask, pc.less(table[column_name], threshold))
+                mask = pc.and_(mask, pc.less_equal(table[column_name], threshold))
 
         self._qc_and_tissue_mask = mask.to_numpy(zero_copy_only=False)
 
