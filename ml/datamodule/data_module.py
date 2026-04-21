@@ -27,10 +27,7 @@ class DataModule(LightningDataModule):
 
     def _instantiate_dataset(
         self, mode: str
-    ) -> MetaTiledSlides[LabeledSample] | MetaTiledSlides[UnlabeledSample] | None:
-
-        if mode == "val" and self.fold is None:
-            return None
+    ) -> MetaTiledSlides[LabeledSample] | MetaTiledSlides[UnlabeledSample]:
 
         fold = self.fold if mode in {"train", "val"} else None
         dataset = instantiate(self.datasets[mode], fold=fold, mode=mode)
@@ -54,7 +51,6 @@ class DataModule(LightningDataModule):
                 self.predict = self._instantiate_dataset("predict")
 
     def train_dataloader(self) -> Iterable[LabeledSample]:
-        assert self.train is not None
         return DataLoader(
             self.train,
             batch_size=self.batch_size,
@@ -64,30 +60,26 @@ class DataModule(LightningDataModule):
             persistent_workers=self.num_workers > 0,
         )
 
-    def val_dataloader(self) -> Iterable[LabeledSample] | None:
-        return (
-            None
-            if self.val is None
-            else DataLoader(
-                self.val,
-                batch_size=self.batch_size,
-                num_workers=self.num_workers,
-                persistent_workers=self.num_workers > 0,
+    def val_dataloader(self) -> Iterable[LabeledSample]:
+        return DataLoader(
+            self.val,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            persistent_workers=self.num_workers > 0,
+        )
+
+    def test_dataloader(self) -> list[Iterable[LabeledSample]]:
+        return [
+            DataLoader(
+                dataset, batch_size=self.batch_size, num_workers=self.num_workers
             )
-        )
+            for dataset in self.test.datasets
+        ]
 
-    def test_dataloader(self) -> Iterable[LabeledSample]:
-        assert self.test is not None
-        return DataLoader(
-            self.test,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-        )
-
-    def predict_dataloader(self) -> Iterable[UnlabeledSample]:
-        assert self.predict is not None
-        return DataLoader(
-            self.predict,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-        )
+    def predict_dataloader(self) -> list[Iterable[UnlabeledSample]]:
+        return [
+            DataLoader(
+                dataset, batch_size=self.batch_size, num_workers=self.num_workers
+            )
+            for dataset in self.predict.datasets
+        ]
