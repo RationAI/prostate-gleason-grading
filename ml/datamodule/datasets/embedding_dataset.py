@@ -88,11 +88,20 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
                 assert self.labels_map is not None
                 label = torch.tensor(self.labels_map[slide["gleason_score"]])
 
+            tiles = self.filter_tiles_by_slide_and_thresholds(slide)
+
+            if len(tiles) == 0:
+                print(
+                    f"Warning: slide {slide['stem']} has no tiles "
+                    f"left after filtering - it will be skipped"
+                )
+                continue
+
             yield cast(
                 "Dataset[T]",
                 EmbeddingsTileDataset(
                     slide=slide["stem"],
-                    tiles=self.filter_tiles_by_slide_and_thresholds(slide),
+                    tiles=tiles,
                     label=label,
                     embeddings_col=self.embeddings_col,
                 ),
