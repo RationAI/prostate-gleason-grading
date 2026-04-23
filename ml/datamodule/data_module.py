@@ -16,6 +16,7 @@ class DataModule(LightningDataModule):
         batch_size: int,
         num_workers: int = 0,
         validation_fold: int | None = None,
+        sampler: DictConfig | None = None,
         **datasets: DictConfig,
     ) -> None:
 
@@ -23,7 +24,17 @@ class DataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.fold = validation_fold
+        self.sampler = sampler
         self.datasets = datasets
+
+    def _instantiate_sampler(
+        self, dataset: MetaTiledSlides[LabeledSample]
+    ) -> Iterable[int] | None:
+        return (
+            instantiate(self.sampler, slides_dataset=dataset)
+            if self.sampler is not None
+            else None
+        )
 
     def _instantiate_dataset(
         self, mode: str
@@ -51,10 +62,12 @@ class DataModule(LightningDataModule):
                 self.predict = self._instantiate_dataset("predict")
 
     def train_dataloader(self) -> Iterable[LabeledSample]:
+        sampler = self._instantiate_sampler(self.train)
         return DataLoader(
             self.train,
             batch_size=self.batch_size,
-            shuffle=True,
+            sampler=sampler,
+            shuffle=True if sampler is None else None,
             drop_last=True,
             num_workers=self.num_workers,
             persistent_workers=self.num_workers > 0,
