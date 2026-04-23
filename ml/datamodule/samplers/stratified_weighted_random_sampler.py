@@ -1,6 +1,7 @@
-from typing import Any
+from collections.abc import Sequence
+from typing import cast
 
-import torch
+import numpy as np
 from torch.utils.data import WeightedRandomSampler
 
 from ml.datamodule.datasets.embedding_dataset import (
@@ -26,30 +27,27 @@ class StratifiedWeightedRandomSampler(WeightedRandomSampler):
             )
 
         super().__init__(
-            weights=self._get_weights(slides_dataset.datasets),
+            weights=self._get_weights(
+                cast("list[EmbeddingsTileDataset]", slides_dataset.datasets)
+            ),
             num_samples=num_samples,
             replacement=replacement,
         )
 
     @staticmethod
-    def _get_weights(slides: list[EmbeddingsTileDataset]) -> torch.Tensor:
+    def _get_weights(slides: list[EmbeddingsTileDataset]) -> Sequence[float]:
 
-        label_counts: dict[Any, int] = {}
+        tile_counts = np.array([len(s) for s in slides], dtype=np.int64)
 
-        for slide in slides:
-            label_counts[slide.label] = label_counts.get(slide.label, 0) + len(slide)
+        labels = []
+        for s in slides:
+            assert s.label is not None
+            labels.append(s.label.item())
 
-        total_count = sum(label_counts.values())
+        _, label_indices = np.unique(labels, return_inverse=True)
 
-        label_probs_inverse = {
-            label: total_count / label_count
-            for label, label_count in label_counts.items()
-        }
+        label_counts = np.bincount(label_indices, weights=tile_counts)
+        label_weights = label_counts.sum() / label_counts
+        slide_weights = label_weights[label_indices]
 
-        return torch.repeat_interleave(
-            torch.tensor(
-                [label_probs_inverse[s.label] for s in slides],
-                dtype=torch.double,
-            ),
-            torch.tensor([len(s) for s in slides], dtype=torch.int64),
-        )
+        return np.repeat(slide_weights, tile_counts).tolist()

@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import cast
+from typing import Literal, cast, overload
 
 from hydra.utils import instantiate
 from lightning import LightningDataModule
@@ -36,6 +36,16 @@ class DataModule(LightningDataModule):
             else None
         )
 
+    @overload
+    def _instantiate_dataset(
+        self, mode: Literal["train", "val", "test"]
+    ) -> MetaTiledSlides[LabeledSample]: ...
+
+    @overload
+    def _instantiate_dataset(
+        self, mode: Literal["predict"]
+    ) -> MetaTiledSlides[UnlabeledSample]: ...
+
     def _instantiate_dataset(
         self, mode: str
     ) -> MetaTiledSlides[LabeledSample] | MetaTiledSlides[UnlabeledSample]:
@@ -67,7 +77,7 @@ class DataModule(LightningDataModule):
             self.train,
             batch_size=self.batch_size,
             sampler=sampler,
-            shuffle=True if sampler is None else None,
+            shuffle=sampler is None,
             drop_last=True,
             num_workers=self.num_workers,
             persistent_workers=self.num_workers > 0,
