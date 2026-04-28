@@ -2,6 +2,12 @@
 
 dataset:
   name: MMCI 2k 224
+  thresholds:
+    tissue_roi_percentage: 0.5
+    residual_percentage: 0.25
+    blur_percentage: 0.25
+    folding_percentage: 0.25
+  carcinoma_prediction_threshold: ???
   mlflow_uris:
     tiling: "mlflow-artifacts:/105/682b14944f1b416193871333574eb30a/artifacts/MMCI 2k 224"
     tiling_with_gs: "mlflow-artifacts:/105/12c1a45b60b0455188f7e05071242a4a/artifacts/MMCI 2k 224"
