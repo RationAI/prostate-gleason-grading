@@ -1,0 +1,4 @@
+_target_: ml.modeling.decode_head.EmbeddingClassifier
+in_features: ???
+out_features: ???
+dropout_probability: 0.5
