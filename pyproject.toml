@@ -34,4 +34,5 @@ dev = [
     "mypy",
     "report",
     "ruff",
+    "seaborn>=0.13.2",
 ]
