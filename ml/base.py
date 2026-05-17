@@ -47,17 +47,27 @@ class GleasonModel(ABC, LightningModule):
     def forward(self, x: Tensor) -> Tensor:
         pass
 
+    def _logits_to_prob(self, logits: Tensor) -> Tensor:
+        return softmax(logits, dim=1)
+
     def training_step(self, batch: LabeledSampleBatch) -> Tensor:
         inputs, _, targets = batch
         logits = self(inputs)
 
         loss = self.criterion(logits, targets)
         self.log(
-            "train/loss", loss, batch_size=len(inputs), on_step=True, prog_bar=True
+            "train/loss",
+            loss,
+            batch_size=len(inputs),
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
         )
 
         self.train_metrics.update(logits, targets)
-        self.log_dict(self.train_metrics, batch_size=len(inputs), on_epoch=True)
+        self.log_dict(
+            self.train_metrics, batch_size=len(inputs), on_step=False, on_epoch=True
+        )
 
         return loss
 
@@ -79,18 +89,20 @@ class GleasonModel(ABC, LightningModule):
 
     def test_step(
         self, batch: LabeledSampleBatch, batch_idx: int, dataloader_idx: int = 0
-    ) -> None:
+    ) -> Tensor:
         inputs, _, targets = batch
         logits = self(inputs)
 
         self.test_metrics.update(logits, targets)
         self.log_dict(self.test_metrics, batch_size=len(inputs), on_epoch=True)
 
+        return self._logits_to_prob(logits)
+
     def predict_step(
         self, batch: UnlabeledSampleBatch, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         inputs, _ = batch
-        return softmax(self(inputs), dim=1)
+        return self._logits_to_prob(self(inputs))
 
     def configure_optimizers(self) -> Optimizer:
         return AdamW(self.parameters(), self.lr)

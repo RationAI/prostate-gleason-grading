@@ -8,7 +8,7 @@ class Classifier(ABC, nn.Module):
         self,
         in_features: int,
         out_features: int,
-        dropout_probability: float = 0.5,
+        dropout_probability: float,
     ) -> None:
 
         super().__init__()
