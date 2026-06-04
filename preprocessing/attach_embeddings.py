@@ -87,7 +87,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
 
     embeddings_dir = Path(mlflow.artifacts.download_artifacts(config.embeddings_uri))
     tiling_path = Path(
-        mlflow.artifacts.download_artifacts(config.data.mlflow_uris.tiling_splits)
+        mlflow.artifacts.download_artifacts(config.dataset.mlflow_uris.tiling_splits)
     )
 
     with TemporaryDirectory() as tmp_dir:
@@ -100,7 +100,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
                 config.embeddings_name,
             )
 
-        mlflow.log_artifacts(str(tmp_dir), config.data.name)
+        mlflow.log_artifacts(str(tmp_dir), config.dataset.name)
 
 
 if __name__ == "__main__":
