@@ -1,0 +1,14 @@
+# @package _global_
+
+dataset:
+  name: ???
+  mlflow_uris:
+    tiling_splits: ???
+
+embeddings_uri: ???
+embeddings_name: ???
+rows_per_file: ???
+
+metadata:
+  run_name: "Splitting with embeddings -- ${dataset.name}"
+  description: "The ${dataset.name} splits with ${embeddings_name} embeddings attached"

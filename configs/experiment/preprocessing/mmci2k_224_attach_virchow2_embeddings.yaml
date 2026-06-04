@@ -1,0 +1,10 @@
+# @package _global_
+
+defaults:
+  - /preprocessing/attach_embeddings
+  - /data/mmci2k_224
+  - _self_
+
+embeddings_uri: ${dataset.mlflow_uris.embeddings.virchow2}
+embeddings_name: "virchow2"
+rows_per_file: 50000
