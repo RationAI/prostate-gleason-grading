@@ -16,26 +16,24 @@ def process_group(
     group: pd.DataFrame, embeddings_dir: Path, embeddings_name: str
 ) -> pd.DataFrame:
 
-    assert group["path"].nunique() == 1, "Expected one unique path per group"
+    if group["path"].nunique() != 1:
+        raise ValueError("Expected one unique path per group")
 
     slide_path = group["path"].iloc[0]
     slide_name = Path(slide_path).stem
 
-    embeddings = (
-        torch.load(
-            str(embeddings_dir / f"{slide_name}.pt"),
-            map_location="cpu",
-        )
-        .cpu()
-        .numpy()
-    )
+    embeddings = torch.load(
+        embeddings_dir / f"{slide_name}.pt",
+        weights_only=True,
+        map_location="cpu",
+    ).numpy()
 
     if len(group) != len(embeddings):
         raise ValueError(
             f"Mismatch: {len(group)} tiles vs {len(embeddings)} embeddings for {slide_name}"
         )
 
-    group = group.copy()
+    group = group.copy().sort_values("_row_order").reset_index(drop=True)
     group[f"{embeddings_name}_embedding"] = embeddings.tolist()
     return group
 
@@ -54,30 +52,30 @@ def attach_embeddings(
     slides_dir = output_dir / "slides"
     tiles_dir = output_dir / "tiles"
 
-    slides_dir.mkdir(parents=True)
-    tiles_dir.mkdir(parents=True)
+    slides_dir.mkdir(parents=True, exist_ok=True)
+    tiles_dir.mkdir(parents=True, exist_ok=True)
 
     slides_df.to_parquet(slides_dir / "slides.parquet", index=False)
 
-    with ray.init(num_cpus=10):
-        tiles_df = tiles_df.join(slides_df.set_index("id")[["path"]], on="slide_id")
+    tiles_df = tiles_df.join(slides_df.set_index("id")[["path"]], on="slide_id")
+    tiles_df["_row_order"] = range(len(tiles_df))
 
-        (
-            ray.data.from_pandas(tiles_df)
-            .groupby("slide_id")
-            .map_groups(
-                process_group,
-                fn_kwargs={
-                    "embeddings_dir": embeddings_dir,
-                    "embeddings_name": embeddings_name,
-                },
-                batch_format="pandas",
-            )
-            .drop_columns(["path"])
-            .write_parquet(
-                str(tiles_dir), max_rows_per_file=rows_per_file, mode=SaveMode.OVERWRITE
-            )
+    (
+        ray.data.from_pandas(tiles_df)
+        .groupby("slide_id")
+        .map_groups(
+            process_group,
+            fn_kwargs={
+                "embeddings_dir": embeddings_dir,
+                "embeddings_name": embeddings_name,
+            },
+            batch_format="pandas",
         )
+        .drop_columns(["path", "_row_order"])
+        .write_parquet(
+            str(tiles_dir), max_rows_per_file=rows_per_file, mode=SaveMode.OVERWRITE
+        )
+    )
 
 
 @with_cli_args(["+preprocessing=attach_embeddings"])
@@ -90,7 +88,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
         mlflow.artifacts.download_artifacts(config.dataset.mlflow_uris.tiling_splits)
     )
 
-    with TemporaryDirectory() as tmp_dir:
+    with TemporaryDirectory() as tmp_dir, ray.init(num_cpus=10):
         for split in ["test", "train"]:
             attach_embeddings(
                 tiling_path / split,
