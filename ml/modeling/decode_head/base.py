@@ -13,6 +13,10 @@ class Classifier(ABC, nn.Module):
 
         super().__init__()
 
+        self.in_features = in_features
+        self.out_features = out_features
+        self.dropout_probability = dropout_probability
+
         self.dropout = nn.Dropout(p=dropout_probability)
         self.proj = nn.Linear(in_features, out_features)
 
