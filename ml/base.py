@@ -23,6 +23,7 @@ class GleasonModel(ABC, LightningModule):
         super().__init__()
 
         self.lr = lr
+        self.num_classes = num_classes
         self.criterion = nn.CrossEntropyLoss()
 
         metrics: MetricCollection = MetricCollection(
@@ -50,7 +51,7 @@ class GleasonModel(ABC, LightningModule):
     def _logits_to_prob(self, logits: Tensor) -> Tensor:
         return softmax(logits, dim=1)
 
-    def training_step(self, batch: LabeledSampleBatch) -> Tensor:
+    def training_step(self, batch: LabeledSampleBatch) -> Tensor | None:
         inputs, _, targets = batch
         logits = self(inputs)
 
