@@ -1,53 +1,33 @@
-from collections.abc import Sequence
-from typing import cast
-
-import numpy as np
+from torch import Tensor, bincount
 from torch.utils.data import WeightedRandomSampler
-
-from ml.datamodule.datasets.embedding_dataset import (
-    EmbeddingsTileDataset,
-    LabeledEmbeddingsSlideDataset,
-)
 
 
 class StratifiedWeightedRandomSampler(WeightedRandomSampler):
     def __init__(
         self,
-        slides_dataset: LabeledEmbeddingsSlideDataset,
+        labels: Tensor,
         num_samples: int | None = None,
         replacement: bool = True,
     ) -> None:
 
-        if num_samples is None:
-            num_samples = len(slides_dataset)
-        elif not replacement and num_samples > len(slides_dataset):
+        num_total_samples = labels.numel()
+        num_class_samples = bincount(labels).double().clamp_min(1.0)
+
+        if (
+            not replacement
+            and num_samples is not None
+            and num_samples > num_total_samples
+        ):
             raise ValueError(
                 "The number of samples can't exceed the size of the "
                 "dataset when samples are drawn without replacement."
             )
 
+        class_weights = num_total_samples / num_class_samples
+        sample_weights = class_weights[labels]
+
         super().__init__(
-            weights=self._get_weights(
-                cast("list[EmbeddingsTileDataset]", slides_dataset.datasets)
-            ),
-            num_samples=num_samples,
+            weights=sample_weights,
+            num_samples=num_samples or num_total_samples,
             replacement=replacement,
         )
-
-    @staticmethod
-    def _get_weights(slides: list[EmbeddingsTileDataset]) -> Sequence[float]:
-
-        tile_counts = np.array([len(s) for s in slides], dtype=np.int64)
-
-        labels = []
-        for s in slides:
-            assert s.label is not None
-            labels.append(s.label.item())
-
-        _, label_indices = np.unique(labels, return_inverse=True)
-
-        label_counts = np.bincount(label_indices, weights=tile_counts)
-        label_weights = label_counts.sum() / label_counts
-        slide_weights = label_weights[label_indices]
-
-        return np.repeat(slide_weights, tile_counts).tolist()
