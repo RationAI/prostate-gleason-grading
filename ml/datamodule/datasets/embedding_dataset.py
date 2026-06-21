@@ -127,7 +127,7 @@ class LabeledEmbeddingsSlideDataset(EmbeddingsSlideDataset[LabeledSample]):
 
         return torch.repeat_interleave(
             torch.tensor(slide_labels, dtype=torch.long),
-            torch.tensor(slide_lengths),
+            torch.tensor(slide_lengths, dtype=torch.long),
         )
 
 
