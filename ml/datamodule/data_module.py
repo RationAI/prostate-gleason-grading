@@ -8,6 +8,7 @@ from omegaconf import DictConfig
 from rationai.mlkit.data.datasets import MetaTiledSlides
 from torch.utils.data import DataLoader
 
+from ml.datamodule.datasets import LabeledEmbeddingsSlideDataset
 from ml.typing import (
     LabeledSample,
     LabeledSampleBatch,
@@ -20,11 +21,11 @@ class DataModule(LightningDataModule):
     def __init__(
         self,
         batch_size: int,
-        num_workers: int = 0,
         drop_last: bool = True,
         shuffle: bool = True,
-        validation_fold: int | None = None,
         sampler: DictConfig | None = None,
+        validation_fold: int | None = None,
+        num_workers: int = 0,
         **datasets: DictConfig,
     ) -> None:
 
@@ -76,9 +77,15 @@ class DataModule(LightningDataModule):
                 self.predict = self._instantiate_dataset("predict")
 
     def get_train_labels(self) -> torch.Tensor:
-        return torch.tensor(
-            [label.item() for _, _, label in self.train], dtype=torch.long
-        )
+        if isinstance(self.train, LabeledEmbeddingsSlideDataset):
+            return self.train.get_labels()
+
+        labels: list[int] = []
+        for idx in range(len(self.train)):
+            _, _, label = self.train[idx]
+            labels.append(label.item())
+
+        return torch.tensor(labels, dtype=torch.long)
 
     def train_dataloader(self) -> Iterable[LabeledSampleBatch]:
         sampler = (

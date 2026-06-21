@@ -86,7 +86,10 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
 
             if self.labeled:
                 assert self.labels_map is not None
-                label = torch.tensor(self.labels_map[slide["gleason_score"]])
+                label = torch.tensor(
+                    self.labels_map[slide["gleason_score"]],
+                    dtype=torch.long,
+                )
 
             tiles = self.filter_tiles_by_slide_and_thresholds(slide)
 
@@ -108,7 +111,23 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
             )
 
 
-class LabeledEmbeddingsSlideDataset(EmbeddingsSlideDataset[LabeledSample]): ...
+class LabeledEmbeddingsSlideDataset(EmbeddingsSlideDataset[LabeledSample]):
+    def get_labels(self) -> torch.Tensor:
+
+        assert self.labeled, "SlideDataset is not labeled."
+
+        slide_labels: list[int] = []
+        slide_lengths: list[int] = []
+
+        for slide in self.datasets:
+            assert slide.label is not None, f"Slide {slide.slide}: unknown label."
+            slide_labels.append(slide.label.item())
+            slide_lengths.append(len(slide))
+
+        return torch.repeat_interleave(
+            torch.tensor(slide_labels, dtype=torch.long),
+            torch.tensor(slide_lengths),
+        )
 
 
 class UnlabeledEmbeddingsSlideDataset(EmbeddingsSlideDataset[UnlabeledSample]): ...

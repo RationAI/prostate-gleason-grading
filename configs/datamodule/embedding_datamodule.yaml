@@ -7,5 +7,7 @@ defaults:
 
 _target_: ml.datamodule.data_module.DataModule
 batch_size: ???
+drop_last: true
+shuffle: true
 num_workers: ???
 validation_fold: null

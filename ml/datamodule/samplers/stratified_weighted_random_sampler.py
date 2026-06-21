@@ -27,7 +27,7 @@ class StratifiedWeightedRandomSampler(WeightedRandomSampler):
         sample_weights = class_weights[labels]
 
         super().__init__(
-            weights=sample_weights,
+            weights=sample_weights.tolist(),
             num_samples=num_samples or num_total_samples,
             replacement=replacement,
         )
