@@ -119,7 +119,8 @@ class LabeledEmbeddingsSlideDataset(EmbeddingsSlideDataset[LabeledSample]):
         slide_labels: list[int] = []
         slide_lengths: list[int] = []
 
-        for slide in self.datasets:
+        for dataset in self.datasets:
+            slide = cast("EmbeddingsTileDataset", dataset)
             assert slide.label is not None, f"Slide {slide.slide}: unknown label."
             slide_labels.append(slide.label.item())
             slide_lengths.append(len(slide))
