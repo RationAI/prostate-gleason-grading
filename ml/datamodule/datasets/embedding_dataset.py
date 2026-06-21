@@ -122,7 +122,7 @@ class LabeledEmbeddingsSlideDataset(EmbeddingsSlideDataset[LabeledSample]):
         for dataset in self.datasets:
             slide = cast("EmbeddingsTileDataset", dataset)
             assert slide.label is not None, f"Slide {slide.slide}: unknown label."
-            slide_labels.append(slide.label.item())
+            slide_labels.append(int(slide.label.item()))
             slide_lengths.append(len(slide))
 
         return torch.repeat_interleave(
