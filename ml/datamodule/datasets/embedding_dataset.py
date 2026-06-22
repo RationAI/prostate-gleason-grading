@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from pathlib import Path
-from typing import TypeVar, cast
+from typing import Any, TypeVar, cast
 
 import torch
 from datasets import Dataset as HFDataset
@@ -73,42 +73,21 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
             labels_map=labels_map,
         )
 
-    def generate_datasets(self) -> Iterable[Dataset[T]]:
-
-        if self.labeled:
-            self._check_labels()
-
-        if self.embeddings_col not in self.tiles.column_names:
-            raise ValueError(f"Embeddings column '{self.embeddings_col}' is missing")
-
-        for slide in self.filter_slides_by_fold():
-            label = None
-
-            if self.labeled:
-                assert self.labels_map is not None
-                label = torch.tensor(
-                    self.labels_map[slide["gleason_score"]],
-                    dtype=torch.long,
-                )
-
-            tiles = self.filter_tiles_by_slide_and_thresholds(slide)
-
-            if len(tiles) == 0:
-                print(
-                    f"Warning: slide {slide['stem']} has no tiles "
-                    f"left after filtering - it will be skipped"
-                )
-                continue
-
-            yield cast(
-                "Dataset[T]",
-                EmbeddingsTileDataset(
-                    slide=slide["stem"],
-                    tiles=tiles,
-                    label=label,
-                    embeddings_col=self.embeddings_col,
-                ),
-            )
+    def _generate_slide_dataset(
+        self,
+        slide: dict[str, Any],
+        tiles: HFDataset,
+        label: torch.Tensor | None,
+    ) -> Dataset[T]:
+        return cast(
+            "Dataset[T]",
+            EmbeddingsTileDataset(
+                slide=slide["stem"],
+                tiles=tiles,
+                label=label,
+                embeddings_col=self.embeddings_col,
+            ),
+        )
 
 
 class LabeledEmbeddingsSlideDataset(EmbeddingsSlideDataset[LabeledSample]):

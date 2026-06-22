@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, TypeVar
@@ -5,8 +6,10 @@ from typing import Any, TypeVar
 import numpy as np
 import pyarrow as pa
 import pyarrow.compute as pc
+import torch
 from datasets import Dataset as HFDataset
 from rationai.mlkit.data.datasets import MetaTiledSlides
+from torch.utils.data import Dataset
 
 
 T = TypeVar("T", covariant=True)
@@ -138,3 +141,38 @@ class FilterableDataset(MetaTiledSlides[T]):
 
         np_indices = np_indices[mask[np_indices]]
         return self.tiles.select(np_indices)
+
+    def generate_datasets(self) -> Iterable[Dataset[T]]:
+
+        if self.labeled:
+            self._check_labels()
+
+        for slide in self.filter_slides_by_fold():
+            label = None
+
+            if self.labeled:
+                assert self.labels_map is not None
+                label = torch.tensor(
+                    self.labels_map[slide["gleason_score"]],
+                    dtype=torch.long,
+                )
+
+            tiles = self.filter_tiles_by_slide_and_thresholds(slide)
+
+            if len(tiles) == 0:
+                print(
+                    f"Warning: slide {slide['stem']} has no tiles "
+                    f"left after filtering - it will be skipped"
+                )
+                continue
+
+            yield self._generate_slide_dataset(slide, tiles, label)
+
+    @abstractmethod
+    def _generate_slide_dataset(
+        self,
+        slide: dict[str, Any],
+        tiles: HFDataset,
+        label: torch.Tensor | None,
+    ) -> Dataset[T]:
+        pass
