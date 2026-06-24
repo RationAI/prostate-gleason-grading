@@ -159,6 +159,9 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
 
         self._batch_cache.append((x, y))
 
+    def on_train_epoch_start(self) -> None:
+        self._batch_cache.clear()
+
     def on_train_epoch_end(self) -> None:
 
         optimizer = cast("LBFGS", self.optimizers())
@@ -180,5 +183,3 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
 
         self.log("train/loss", loss, batch_size=num_samples, on_epoch=True)
         self._update_and_log_metrics(num_samples)
-
-        self._batch_cache.clear()
