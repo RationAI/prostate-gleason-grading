@@ -59,7 +59,7 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
 
     def _configure_criterion(self) -> None:
 
-        labels = self.trainer.datamodule.get_train_labels()
+        labels = cast("Any", self.trainer).datamodule.get_train_labels()
 
         num_total_samples = labels.numel()
         num_class_samples = (
@@ -82,7 +82,7 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
     def _validate_requirements(self) -> None:
 
         classifier: Classifier = self.decode_head
-        datamodule: DataModule = self.trainer.datamodule
+        datamodule: DataModule = cast("Any", self.trainer).datamodule
 
         samples_per_epoch = self.trainer.num_training_batches * datamodule.batch_size
 
@@ -167,7 +167,7 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
         optimizer = cast("LBFGS", self.optimizers())
 
         num_samples = sum(len(y) for _, y in self._batch_cache)
-        assert num_samples == len(self.trainer.datamodule.train)
+        assert num_samples == len(cast("Any", self.trainer).datamodule.train)
 
         assert self.criterion.weight is not None
         dataset_weight = torch.zeros((), device=self.device)
