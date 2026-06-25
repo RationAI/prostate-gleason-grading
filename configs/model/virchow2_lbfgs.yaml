@@ -15,3 +15,4 @@ cache_on_cpu: ???
 decode_head:
   in_features: 2560
   out_features: ${..num_classes}
+  dropout_probability: 0
