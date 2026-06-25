@@ -37,9 +37,12 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
         lbfgs_kwargs: dict[str, Any],
         weight_decay: float = 0.0,
         cache_on_cpu: bool = True,
+        early_stopping: bool = True,
     ) -> None:
 
         super().__init__(num_classes, lr, decode_head)
+
+        self.early_stopping = early_stopping
 
         self.automatic_optimization = False
 
@@ -144,6 +147,10 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
 
             self.log_dict(self.train_metrics, batch_size=num_samples, on_epoch=True)
 
+    def _get_n_iters(self, optimizer: LBFGS) -> int:
+        param = optimizer.param_groups[0]["params"][0]
+        return optimizer.state[param].get("n_iter", 0)
+
     def on_fit_start(self) -> None:
         self._validate_requirements()
         self._configure_criterion()
@@ -179,7 +186,15 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
             optimizer.zero_grad()
             return self._compute_loss_and_backward(dataset_weight)
 
+        prev_n_iters = self._get_n_iters(optimizer)
+
         loss = optimizer.step(closure)
+
+        curr_n_iters = self._get_n_iters(optimizer)
+        step_n_iters = curr_n_iters - prev_n_iters
 
         self.log("train/loss", loss, batch_size=num_samples, on_epoch=True)
         self._update_and_log_metrics(num_samples)
+
+        if self.early_stopping and step_n_iters < optimizer.param_groups[0]["max_iter"]:
+            self.trainer.should_stop = True
