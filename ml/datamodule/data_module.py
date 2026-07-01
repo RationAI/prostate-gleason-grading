@@ -23,20 +23,23 @@ class DataModule(LightningDataModule):
         drop_last: bool,
         shuffle: bool,
         sampler: DictConfig | None = None,
-        validation_fold: int | None = None,
+        fold: int | None = None,
+        invert_fold_selection: bool = False,
         num_workers: int = 0,
         **datasets: DictConfig,
     ) -> None:
 
         super().__init__()
 
+        self.datasets = datasets
+
+        self.fold = fold
+        self.invert_fold_selection = invert_fold_selection
+
         self.drop_last = drop_last
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.sampler = sampler
-
-        self.fold = validation_fold
-        self.datasets = datasets
 
         self.num_workers = num_workers
 
@@ -55,7 +58,12 @@ class DataModule(LightningDataModule):
     ) -> MetaTiledSlides[LabeledSample] | MetaTiledSlides[UnlabeledSample]:
 
         fold = self.fold if mode in {"train", "val"} else None
-        dataset = instantiate(self.datasets[mode], fold=fold, mode=mode)
+        dataset = instantiate(
+            self.datasets[mode],
+            mode=mode,
+            fold=fold,
+            invert_fold_selection=self.invert_fold_selection,
+        )
 
         return (
             cast("MetaTiledSlides[UnlabeledSample]", dataset)

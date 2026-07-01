@@ -56,8 +56,9 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
         carcinoma_prediction_threshold: float | None = None,
         uris: Iterable[str] | None = None,
         paths: Iterable[Path | str] | None = None,
-        fold: int | None = None,
         mode: str | None = None,
+        fold: int | None = None,
+        invert_fold_selection: bool = False,
         labels_map: dict[str, int] | None = None,
     ) -> None:
 
@@ -68,8 +69,9 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
             carcinoma_prediction_threshold=carcinoma_prediction_threshold,
             uris=uris,
             paths=paths,
-            fold=fold,
             mode=mode,
+            fold=fold,
+            invert_fold_selection=invert_fold_selection,
             labels_map=labels_map,
         )
 
