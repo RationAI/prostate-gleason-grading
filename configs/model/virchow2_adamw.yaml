@@ -1,6 +1,6 @@
 defaults:
-  - _self_
   - decode_head@decode_head: embedding_classifier
+  - _self_
 
 _target_: ml.embedding_model.AdamWEmbeddingGleasonModel
 num_classes: 3

@@ -1,0 +1,36 @@
+# @package _global_
+
+defaults:
+  - /experiment/training/mmci2k/embeddings/virchow2/base
+  - /model/virchow2_lbfgs@model
+  - _self_
+
+model_name: "Virchow2 (LBFGS)"
+
+model:
+  lr: 1
+  weight_decay: ???
+  cache_on_cpu: true
+  early_stopping: true
+  lbfgs_kwargs:
+    max_iter: 20
+    history_size: 100
+    tolerance_grad: 1.0e-7
+    tolerance_change: 1.0e-9
+
+datamodule:
+  drop_last: false
+  shuffle: false
+  sampler: null
+  invert_fold_selection: true
+
+trainer:
+  deterministic: true
+  use_distributed_sampler: False
+  devices: 1
+  num_nodes: 1
+  limit_train_batches: 1.0
+  overfit_batches: 0.0
+  min_epochs: 1
+  val_check_interval: 1.0
+  check_val_every_n_epoch: 1

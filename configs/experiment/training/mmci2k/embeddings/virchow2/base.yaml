@@ -1,0 +1,19 @@
+# @package _global_
+defaults:
+  - /data/mmci2k_224@data
+  - /experiment/training/mmci2k/embeddings/base
+  - _self_
+
+datamodule:
+
+  fold: ???
+
+  train:
+    uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/train"]
+    paths: null
+    embeddings_col: virchow2_embedding
+
+  val:
+    uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/train"]
+    paths: null
+    embeddings_col: virchow2_embedding
