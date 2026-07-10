@@ -2,8 +2,8 @@ _target_: ml.datamodule.datasets.LabeledEmbeddingsSlideDataset
 uris: ???
 paths: ???
 embeddings_col: ???
-qc_and_tissue_thresholds: ${dataset.thresholds}
-carcinoma_prediction_threshold: ${dataset.carcinoma_prediction_threshold}
+qc_and_tissue_thresholds: ${data.dataset.thresholds}
+carcinoma_prediction_threshold: ${data.dataset.carcinoma_prediction_threshold}
 labels_map:
   "None": 0
   "3+3": 1

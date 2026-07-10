@@ -1,0 +1,23 @@
+# @package _global_
+
+mode: fit
+
+model_name: ???
+
+data:
+  dataset:
+    name: ???
+
+callbacks: {}
+
+trainer:
+  callbacks: ${..callbacks}
+  enable_checkpointing: True
+  enable_progress_bar: True
+  enable_model_summary: True
+  log_every_n_steps: 5
+  val_check_interval: 0.25
+
+metadata:
+  run_name: "${model_name} ${data.dataset.name}"
+  description: "${model_name} model trained on ${data.dataset.name} dataset"
