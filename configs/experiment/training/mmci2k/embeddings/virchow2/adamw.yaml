@@ -1,0 +1,11 @@
+# @package _global_
+
+defaults:
+  - /experiment/training/mmci2k/embeddings/virchow2/base
+  - /model/virchow2_adamw@model
+  - _self_
+
+model_name: "Virchow2 (AdamW)"
+
+model:
+  lr: ???

@@ -21,3 +21,4 @@ dataset:
     cancer_prediction_table: "mlflow-artifacts:/65/3152bb5ab5a840b89a61df33ec9689de/artifacts/tables/cancer_prediction_table.json"
     embeddings:
       virchow2: "mlflow-artifacts:/65/1429184febea4cdcb26616c4038c6a71/artifacts/MMCI SL All"
+      virchow2_tiling_splits: "mlflow-artifacts:/105/9c8f3d47667f44e0b60f5eff1f959301/artifacts/MMCI 2k 224"
