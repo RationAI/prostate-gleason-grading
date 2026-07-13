@@ -2,7 +2,7 @@ from kube_jobs import submit_job
 
 
 submit_job(
-    job_name="prostate-gleason-train-virchow2-lbfgs",
+    job_name="prostate-gleason-train-virchow2-adamw",
     username=...,
     image="cerit.io/rationai/base:2.0.6",
     cpu=8,
