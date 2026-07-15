@@ -1,5 +1,9 @@
 # @package _global_
 
+defaults:
+  - /callbacks/checkpointing
+  - /callbacks/early_stopping
+
 mode: fit
 
 model_name: ???
@@ -8,10 +12,7 @@ data:
   dataset:
     name: ???
 
-callbacks: {}
-
 trainer:
-  callbacks: ${..callbacks}
   enable_checkpointing: True
   enable_progress_bar: True
   enable_model_summary: True

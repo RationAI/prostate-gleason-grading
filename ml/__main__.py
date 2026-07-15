@@ -15,13 +15,25 @@ OmegaConf.register_new_resolver(
 @hydra.main(config_path="../configs", config_name="ml", version_base=None)
 @autolog
 def main(config: DictConfig, logger: MLFlowLogger) -> None:
+
     seed_everything(config.seed, workers=True)
 
     data = hydra.utils.instantiate(config.datamodule, _recursive_=False)
 
     model = hydra.utils.instantiate(config.model)
 
-    trainer = hydra.utils.instantiate(config.trainer, _target_=Trainer, logger=logger)
+    callbacks = hydra.utils.instantiate(config.callbacks)
+    callbacks = {
+        name: callback for name, callback in callbacks.items() if callback is not None
+    }
+
+    trainer = hydra.utils.instantiate(
+        config.trainer,
+        _target_=Trainer,
+        logger=logger,
+        callbacks=callbacks,
+    )
+
     getattr(trainer, config.mode)(model, datamodule=data, ckpt_path=config.checkpoint)
 
 
