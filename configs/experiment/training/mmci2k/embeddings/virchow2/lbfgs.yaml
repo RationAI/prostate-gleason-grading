@@ -5,6 +5,9 @@ defaults:
   - /model/virchow2_lbfgs@model
   - _self_
 
+callbacks:
+  early_stopping: null
+
 model_name: "Virchow2 (LBFGS)"
 
 model:

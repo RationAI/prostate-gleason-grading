@@ -1,4 +1,5 @@
 # @package _global_
+
 defaults:
   - /experiment/training/base
   - /datamodule/embedding_datamodule@datamodule
