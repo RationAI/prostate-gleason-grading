@@ -138,6 +138,7 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
 
     def _update_and_log_metrics(self, num_samples: int) -> None:
 
+        self.train_metrics.reset()
         with torch.no_grad():
             for x, y in self._batch_cache:
                 if self._cache_on_cpu:
@@ -152,8 +153,10 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
         return optimizer.state[param].get("n_iter", 0)
 
     def on_fit_start(self) -> None:
-        self._validate_requirements()
         self._configure_criterion()
+
+    def on_train_start(self) -> None:
+        self._validate_requirements()
 
     @override
     def training_step(self, batch: LabeledSampleBatch) -> None:
