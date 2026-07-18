@@ -107,17 +107,17 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
                 "or classifier dropout is not allowed."
             )
 
-    def _compute_loss_and_backward(self, dataset_weight: Tensor) -> Tensor:
+    def _compute_loss_and_backward(
+        self, dataset_weight: Tensor, batch_weights: list[Tensor]
+    ) -> Tensor:
 
         dataset_loss = torch.zeros((), device=self.device)
 
-        for x, y in self._batch_cache:
+        for (x, y), batch_weight in zip(self._batch_cache, batch_weights, strict=True):
             if self._cache_on_cpu:
                 x = x.to(self.device)
                 y = y.to(self.device)
 
-            assert self.criterion.weight is not None
-            batch_weight = self.criterion.weight[y].sum()
             batch_loss = self.criterion(self(x), y)
 
             rescaled_loss = batch_loss * batch_weight / dataset_weight
@@ -180,14 +180,15 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
         assert num_samples == len(cast("Any", self.trainer).datamodule.train)
 
         assert self.criterion.weight is not None
-        dataset_weight = torch.zeros((), device=self.device)
+        batch_weights: list[Tensor] = []
         for _, y in self._batch_cache:
             idx = y.to(self.device) if self._cache_on_cpu else y
-            dataset_weight += self.criterion.weight[idx].sum()
+            batch_weights.append(self.criterion.weight[idx].sum())
+        dataset_weight = sum(batch_weights, start=torch.zeros((), device=self.device))
 
         def closure() -> Tensor:
             optimizer.zero_grad()
-            return self._compute_loss_and_backward(dataset_weight)
+            return self._compute_loss_and_backward(dataset_weight, batch_weights)
 
         prev_n_iters = self._get_n_iters(optimizer)
 
