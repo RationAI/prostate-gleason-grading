@@ -1,40 +1,47 @@
 from collections.abc import Iterable
 from typing import Literal, cast, overload
 
+import torch
 from hydra.utils import instantiate
 from lightning import LightningDataModule
 from omegaconf import DictConfig
 from rationai.mlkit.data.datasets import MetaTiledSlides
 from torch.utils.data import DataLoader
 
-from ml.typing import LabeledSample, UnlabeledSample
+from ml.typing import (
+    LabeledSample,
+    LabeledSampleBatch,
+    UnlabeledSample,
+    UnlabeledSampleBatch,
+)
 
 
 class DataModule(LightningDataModule):
     def __init__(
         self,
         batch_size: int,
-        num_workers: int = 0,
-        validation_fold: int | None = None,
+        drop_last: bool,
+        shuffle: bool,
         sampler: DictConfig | None = None,
+        fold: int | None = None,
+        invert_fold_selection: bool = False,
+        num_workers: int = 0,
         **datasets: DictConfig,
     ) -> None:
 
         super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.fold = validation_fold
-        self.sampler = sampler
+
         self.datasets = datasets
 
-    def _instantiate_sampler(
-        self, dataset: MetaTiledSlides[LabeledSample]
-    ) -> Iterable[int] | None:
-        return (
-            instantiate(self.sampler, slides_dataset=dataset)
-            if self.sampler is not None
-            else None
-        )
+        self.fold = fold
+        self.invert_fold_selection = invert_fold_selection
+
+        self.drop_last = drop_last
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.sampler = sampler
+
+        self.num_workers = num_workers
 
     @overload
     def _instantiate_dataset(
@@ -51,7 +58,12 @@ class DataModule(LightningDataModule):
     ) -> MetaTiledSlides[LabeledSample] | MetaTiledSlides[UnlabeledSample]:
 
         fold = self.fold if mode in {"train", "val"} else None
-        dataset = instantiate(self.datasets[mode], fold=fold, mode=mode)
+        dataset = instantiate(
+            self.datasets[mode],
+            mode=mode,
+            fold=fold,
+            invert_fold_selection=self.invert_fold_selection,
+        )
 
         return (
             cast("MetaTiledSlides[UnlabeledSample]", dataset)
@@ -71,19 +83,30 @@ class DataModule(LightningDataModule):
             case "predict":
                 self.predict = self._instantiate_dataset("predict")
 
-    def train_dataloader(self) -> Iterable[LabeledSample]:
-        sampler = self._instantiate_sampler(self.train)
+    def get_train_labels(self) -> torch.Tensor:
+
+        if hasattr(self.train, "get_labels") and callable(self.train.get_labels):
+            return self.train.get_labels()
+
+        raise RuntimeError("Train dataset does not provide labels.")
+
+    def train_dataloader(self) -> Iterable[LabeledSampleBatch]:
+        sampler = (
+            instantiate(self.sampler, labels=self.get_train_labels())
+            if self.sampler is not None
+            else None
+        )
         return DataLoader(
             self.train,
             batch_size=self.batch_size,
             sampler=sampler,
-            shuffle=sampler is None,
-            drop_last=True,
+            shuffle=sampler is None and self.shuffle,
+            drop_last=self.drop_last,
             num_workers=self.num_workers,
             persistent_workers=self.num_workers > 0,
         )
 
-    def val_dataloader(self) -> Iterable[LabeledSample]:
+    def val_dataloader(self) -> Iterable[LabeledSampleBatch]:
         return DataLoader(
             self.val,
             batch_size=self.batch_size,
@@ -91,7 +114,7 @@ class DataModule(LightningDataModule):
             persistent_workers=self.num_workers > 0,
         )
 
-    def test_dataloader(self) -> list[Iterable[LabeledSample]]:
+    def test_dataloader(self) -> list[Iterable[LabeledSampleBatch]]:
         return [
             DataLoader(
                 dataset, batch_size=self.batch_size, num_workers=self.num_workers
@@ -99,7 +122,7 @@ class DataModule(LightningDataModule):
             for dataset in self.test.datasets
         ]
 
-    def predict_dataloader(self) -> list[Iterable[UnlabeledSample]]:
+    def predict_dataloader(self) -> list[Iterable[UnlabeledSampleBatch]]:
         return [
             DataLoader(
                 dataset, batch_size=self.batch_size, num_workers=self.num_workers

@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, TypeVar
@@ -5,8 +6,10 @@ from typing import Any, TypeVar
 import numpy as np
 import pyarrow as pa
 import pyarrow.compute as pc
+import torch
 from datasets import Dataset as HFDataset
 from rationai.mlkit.data.datasets import MetaTiledSlides
+from torch.utils.data import Dataset
 
 
 T = TypeVar("T", covariant=True)
@@ -19,8 +22,9 @@ class FilterableDataset(MetaTiledSlides[T]):
         carcinoma_prediction_threshold: float | None,
         uris: Iterable[str] | None = None,
         paths: Iterable[Path | str] | None = None,
-        fold: int | None = None,
         mode: str | None = None,
+        fold: int | None = None,
+        invert_fold_selection: bool = False,
         labels_map: dict[str, int] | None = None,
     ) -> None:
 
@@ -32,8 +36,9 @@ class FilterableDataset(MetaTiledSlides[T]):
         if self.labeled and self.labels_map is None:
             raise ValueError("Labels map is expected for labeled dataset.")
 
-        self.fold = fold
         self.mode = mode
+        self.fold = fold
+        self.invert_fold_selection = invert_fold_selection
 
         if self.fold is not None and self.mode not in {"train", "val"}:
             raise ValueError(
@@ -102,21 +107,24 @@ class FilterableDataset(MetaTiledSlides[T]):
             )
             self._carcinoma_prediction_mask = mask.to_numpy(zero_copy_only=False)
 
-    def filter_slides_by_fold(self) -> HFDataset:
+    def _filter_slides_by_fold(self) -> HFDataset:
 
         if self.fold is not None:
             if "fold" not in self.slides.column_names:
                 raise ValueError("Fold filtering requires a 'fold' column in slides.")
             if self.fold not in self.slides.unique("fold"):
                 raise ValueError(f"Unknown fold: {self.fold}")
-            if self.mode == "train":
+
+            assert self.mode in {"train", "val"}
+
+            if (self.mode == "train") ^ self.invert_fold_selection:
                 return self.slides.filter(lambda s: s["fold"] != self.fold)
-            if self.mode == "val":
+            else:
                 return self.slides.filter(lambda s: s["fold"] == self.fold)
 
         return self.slides
 
-    def filter_tiles_by_slide_and_thresholds(self, slide: dict[str, Any]) -> HFDataset:
+    def _filter_tiles_by_slide_and_thresholds(self, slide: dict[str, Any]) -> HFDataset:
 
         indices = self._slide_id_to_indices.get(slide["id"])
 
@@ -138,3 +146,38 @@ class FilterableDataset(MetaTiledSlides[T]):
 
         np_indices = np_indices[mask[np_indices]]
         return self.tiles.select(np_indices)
+
+    def generate_datasets(self) -> Iterable[Dataset[T]]:
+
+        if self.labeled:
+            self._check_labels()
+
+        for slide in self._filter_slides_by_fold():
+            label = None
+
+            if self.labeled:
+                assert self.labels_map is not None
+                label = torch.tensor(
+                    self.labels_map[slide["gleason_score"]],
+                    dtype=torch.long,
+                )
+
+            tiles = self._filter_tiles_by_slide_and_thresholds(slide)
+
+            if len(tiles) == 0:
+                print(
+                    f"Warning: slide {slide['stem']} has no tiles "
+                    f"left after filtering - it will be skipped"
+                )
+                continue
+
+            yield self._generate_slide_dataset(slide, tiles, label)
+
+    @abstractmethod
+    def _generate_slide_dataset(
+        self,
+        slide: dict[str, Any],
+        tiles: HFDataset,
+        label: torch.Tensor | None,
+    ) -> Dataset[T]:
+        pass

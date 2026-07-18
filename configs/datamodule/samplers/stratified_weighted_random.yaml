@@ -1,4 +1,4 @@
 _target_: ml.datamodule.samplers.StratifiedWeightedRandomSampler
-slides_dataset: ???
+labels: ???
 num_samples: null
 replacement: true
