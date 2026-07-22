@@ -13,6 +13,6 @@ submit_job(
         "git clone https://github.com/RationAI/prostate-gleason-grading.git workdir",
         "cd workdir",
         "uv sync",
-        "uv run -m ml +experiment=/training/mmci2k/embeddings/virchow2/lbfgs datamodule.fold=... model.weight_decay=...",
+        "uv run -m ml +experiment=/training/mmci2k/embeddings/virchow2/lbfgs datamodule.fold=... datamodule.invert_fold_selection=... model.weight_decay=...",
     ],
 )

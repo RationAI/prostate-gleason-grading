@@ -9,3 +9,6 @@ model_name: "Virchow2 (AdamW)"
 
 model:
   lr: ???
+
+metadata:
+  run_name: "${model_name} ${data.dataset.name} fold=${datamodule.fold} inverse=${datamodule.invert_fold_selection} lr=${model.lr} seed=${seed}"

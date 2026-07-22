@@ -1,7 +1,6 @@
 # @package callbacks.early_stopping
 
 _target_: lightning.pytorch.callbacks.EarlyStopping
-monitor: validation/AUROC
-mode: max
-patience: 3
-
+monitor: validation/loss
+mode: min
+patience: 10
