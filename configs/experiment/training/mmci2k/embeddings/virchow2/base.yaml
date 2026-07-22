@@ -6,8 +6,6 @@ defaults:
 
 datamodule:
 
-  fold: ???
-
   train:
     uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/train"]
     paths: null
