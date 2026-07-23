@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Any, cast, override
 
 import torch
-from lightning.pl import Trainer
 from torch import Tensor, nn
 from torch.optim import LBFGS, Optimizer
 
@@ -93,7 +92,7 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
 
     def _validate_requirements(self) -> None:
 
-        trainer: Trainer = self.trainer
+        trainer = cast("Any", self.trainer)
         datamodule: DataModule = trainer.datamodule
         classifier: Classifier = self.decode_head
 
