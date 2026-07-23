@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any, cast, override
 
 import torch
+from lightning.pl import Trainer
 from torch import Tensor, nn
 from torch.optim import LBFGS, Optimizer
 
@@ -42,14 +43,22 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
 
         super().__init__(num_classes, lr, decode_head)
 
-        self.early_stopping = early_stopping
-
         self.automatic_optimization = False
+
+        self.early_stopping = early_stopping
 
         self._weight_decay = weight_decay
         self._lbfgs_kwargs = lbfgs_kwargs
         self._cache_on_cpu = cache_on_cpu
         self._batch_cache: list[tuple[Tensor, Tensor]] = []
+
+        # "dummy" criterion for checkpoint loading, weights will be
+        # recomputed based on the label distribution during training
+
+        self._train_criterion = nn.CrossEntropyLoss(
+            reduction="mean",
+            weight=torch.ones(num_classes),
+        )
 
     @override
     def configure_optimizers(self) -> Optimizer:
@@ -60,7 +69,7 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
             **self._lbfgs_kwargs,
         )
 
-    def _configure_criterion(self) -> None:
+    def _configure_train_criterion(self) -> None:
 
         labels = cast("Any", self.trainer).datamodule.get_train_labels()
 
@@ -77,19 +86,25 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
         class_frequencies = num_class_samples / num_total_samples
         class_weights = 1 / (self.num_classes * class_frequencies)
 
-        self.criterion = nn.CrossEntropyLoss(
+        self._train_criterion = nn.CrossEntropyLoss(
             reduction="mean",
             weight=class_weights.to(self.device),
         )
 
     def _validate_requirements(self) -> None:
 
+        trainer: Trainer = self.trainer
+        datamodule: DataModule = trainer.datamodule
         classifier: Classifier = self.decode_head
-        datamodule: DataModule = cast("Any", self.trainer).datamodule
 
-        samples_per_epoch = self.trainer.num_training_batches * datamodule.batch_size
+        samples_per_epoch = trainer.num_training_batches * datamodule.batch_size
 
-        if samples_per_epoch < len(datamodule.train) or datamodule.drop_last:
+        if (
+            samples_per_epoch < len(datamodule.train)
+            or datamodule.drop_last
+            or trainer.overfit_batches != 0.0
+            or trainer.limit_train_batches != 1.0
+        ):
             raise ValueError(
                 "LBFGS requires global deterministic objective function. "
                 "Dropping last batch or not covering the whole dataset is "
@@ -100,11 +115,22 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
             classifier.dropout_probability > 0
             or datamodule.shuffle
             or datamodule.sampler is not None
+            or trainer.use_distributed_sampler
+            or not trainer.deterministic
         ):
             raise ValueError(
                 "LBFGS requires global deterministic objective function. "
                 "Any non-determinism like shuffling, randomized sampling, "
                 "or classifier dropout is not allowed."
+            )
+
+        if trainer.num_devices != 1 or trainer.num_nodes != 1:
+            raise ValueError("LBFGS requires a single device on a single node.")
+
+        if trainer.val_check_interval != 1.0:
+            print(
+                "Warning: Training is performed only once at the end of the "
+                "epoch. Validation between training steps is not meaningful."
             )
 
     def _compute_loss_and_backward(
@@ -118,7 +144,7 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
                 x = x.to(self.device)
                 y = y.to(self.device)
 
-            batch_loss = self.criterion(self(x), y)
+            batch_loss = self._train_criterion(self(x), y)
 
             rescaled_loss = batch_loss * batch_weight / dataset_weight
 
@@ -152,38 +178,18 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
         param = optimizer.param_groups[0]["params"][0]
         return optimizer.state[param].get("n_iter", 0)
 
-    def on_fit_start(self) -> None:
-        self._configure_criterion()
-
-    def on_train_start(self) -> None:
-        self._validate_requirements()
-
-    @override
-    def training_step(self, batch: LabeledSampleBatch) -> None:
-
-        x, _, y = batch
-
-        if self._cache_on_cpu:
-            x = x.cpu()
-            y = y.cpu()
-
-        self._batch_cache.append((x, y))
-
-    def on_train_epoch_start(self) -> None:
-        self._batch_cache.clear()
-
-    def on_train_epoch_end(self) -> None:
+    def _optimize(self) -> None:
 
         optimizer = cast("LBFGS", self.optimizers())
 
         num_samples = sum(len(y) for _, y in self._batch_cache)
         assert num_samples == len(cast("Any", self.trainer).datamodule.train)
 
-        assert self.criterion.weight is not None
+        assert self._train_criterion.weight is not None
         batch_weights: list[Tensor] = []
         for _, y in self._batch_cache:
             idx = y.to(self.device) if self._cache_on_cpu else y
-            batch_weights.append(self.criterion.weight[idx].sum())
+            batch_weights.append(self._train_criterion.weight[idx].sum())
         dataset_weight = sum(batch_weights, start=torch.zeros((), device=self.device))
 
         def closure() -> Tensor:
@@ -202,3 +208,27 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
 
         if self.early_stopping and step_n_iters < optimizer.param_groups[0]["max_iter"]:
             self.trainer.should_stop = True
+
+    def on_fit_start(self) -> None:
+        self._configure_train_criterion()
+
+    def on_train_start(self) -> None:
+        self._validate_requirements()
+
+    def on_train_epoch_start(self) -> None:
+        self._batch_cache.clear()
+
+    @override
+    def training_step(self, batch: LabeledSampleBatch, batch_idx: int) -> None:
+
+        x, _, y = batch
+
+        if self._cache_on_cpu:
+            x = x.cpu()
+            y = y.cpu()
+
+        self._batch_cache.append((x, y))
+
+        if batch_idx == self.trainer.num_training_batches - 1:
+            self._optimize()
+            self._batch_cache.clear()

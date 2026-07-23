@@ -51,7 +51,7 @@ class GleasonModel(ABC, LightningModule):
     def _logits_to_prob(self, logits: Tensor) -> Tensor:
         return softmax(logits, dim=1)
 
-    def training_step(self, batch: LabeledSampleBatch) -> Tensor | None:
+    def training_step(self, batch: LabeledSampleBatch, batch_idx: int) -> Tensor | None:
         inputs, _, targets = batch
         logits = self(inputs)
 
