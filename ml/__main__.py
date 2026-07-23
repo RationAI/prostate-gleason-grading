@@ -1,6 +1,7 @@
 from random import randint
 
 import hydra
+import mlflow
 from lightning import seed_everything
 from omegaconf import DictConfig, OmegaConf
 from rationai.mlkit import Trainer, autolog
@@ -35,6 +36,8 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
     )
 
     getattr(trainer, config.mode)(model, datamodule=data, ckpt_path=config.checkpoint)
+
+    mlflow.end_run()
 
 
 if __name__ == "__main__":
