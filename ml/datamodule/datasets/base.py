@@ -12,10 +12,10 @@ from rationai.mlkit.data.datasets import MetaTiledSlides
 from torch.utils.data import Dataset
 
 
-T = TypeVar("T", covariant=True)
+T_co = TypeVar("T_co", covariant=True)
 
 
-class FilterableDataset(MetaTiledSlides[T]):
+class FilterableDataset(MetaTiledSlides[T_co]):
     def __init__(
         self,
         qc_and_tissue_thresholds: dict[str, float],
@@ -147,7 +147,7 @@ class FilterableDataset(MetaTiledSlides[T]):
         np_indices = np_indices[mask[np_indices]]
         return self.tiles.select(np_indices)
 
-    def generate_datasets(self) -> Iterable[Dataset[T]]:
+    def generate_datasets(self) -> Iterable[Dataset[T_co]]:
 
         if self.labeled:
             self._check_labels()
@@ -179,5 +179,5 @@ class FilterableDataset(MetaTiledSlides[T]):
         slide: dict[str, Any],
         tiles: HFDataset,
         label: torch.Tensor | None,
-    ) -> Dataset[T]:
+    ) -> Dataset[T_co]:
         pass
