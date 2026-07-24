@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Any, cast, override
 
+import lightning as pl
 import torch
 from torch import Tensor, nn
 from torch.optim import LBFGS, Optimizer
@@ -92,8 +93,8 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
 
     def _validate_requirements(self) -> None:
 
-        trainer = cast("Any", self.trainer)
-        datamodule: DataModule = trainer.datamodule
+        trainer: pl.Trainer = self.trainer
+        datamodule: DataModule = cast("Any", trainer).datamodule
         classifier: Classifier = self.decode_head
 
         samples_per_epoch = trainer.num_training_batches * datamodule.batch_size
@@ -101,7 +102,6 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
         if (
             samples_per_epoch < len(datamodule.train)
             or datamodule.drop_last
-            or trainer.overfit_batches != 0.0
             or trainer.limit_train_batches != 1.0
         ):
             raise ValueError(
@@ -114,8 +114,6 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
             classifier.dropout_probability > 0
             or datamodule.shuffle
             or datamodule.sampler is not None
-            or trainer.use_distributed_sampler
-            or not trainer.deterministic
         ):
             raise ValueError(
                 "LBFGS requires global deterministic objective function. "
