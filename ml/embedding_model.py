@@ -167,7 +167,11 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
                 if self._cache_on_cpu:
                     x = x.to(self.device)
                     y = y.to(self.device)
-                self.train_metrics.update(self(x), y)
+
+                logits = self(x)
+
+                self.train_cm.update(logits, y)
+                self.train_metrics.update(logits, y)
 
             self.log_dict(self.train_metrics, batch_size=num_samples, on_epoch=True)
 
