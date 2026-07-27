@@ -159,9 +159,8 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
 
         return (dataset_loss + regularization_loss).detach()
 
-    def _update_and_log_metrics(self, num_samples: int) -> None:
+    def _update_metrics(self) -> None:
 
-        self.train_metrics.reset()
         with torch.no_grad():
             for x, y in self._batch_cache:
                 if self._cache_on_cpu:
@@ -173,18 +172,13 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
                 self.train_cm.update(logits, y)
                 self.train_metrics.update(logits, y)
 
-            self.log_dict(self.train_metrics, batch_size=num_samples, on_epoch=True)
-
     def _get_n_iters(self, optimizer: LBFGS) -> int:
         param = optimizer.param_groups[0]["params"][0]
         return optimizer.state[param].get("n_iter", 0)
 
-    def _optimize(self) -> None:
+    def _optimize(self) -> Tensor:
 
         optimizer = cast("LBFGS", self.optimizers())
-
-        num_samples = sum(len(y) for _, y in self._batch_cache)
-        assert num_samples == len(cast("Any", self.trainer).datamodule.train)
 
         assert self._train_criterion.weight is not None
         batch_weights: list[Tensor] = []
@@ -204,11 +198,10 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
         curr_n_iters = self._get_n_iters(optimizer)
         step_n_iters = curr_n_iters - prev_n_iters
 
-        self.log("train/loss", loss, batch_size=num_samples, on_epoch=True)
-        self._update_and_log_metrics(num_samples)
-
         if self.early_stopping and step_n_iters < optimizer.param_groups[0]["max_iter"]:
             self.trainer.should_stop = True
+
+        return loss
 
     def on_fit_start(self) -> None:
         self._configure_train_criterion()
@@ -231,5 +224,18 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
         self._batch_cache.append((x, y))
 
         if batch_idx == self.trainer.num_training_batches - 1:
-            self._optimize()
+            num_samples = sum(len(y) for _, y in self._batch_cache)
+            assert num_samples == len(cast("Any", self.trainer).datamodule.train)
+
+            loss = self._optimize()
+            self.log(
+                "train/loss",
+                loss,
+                batch_size=num_samples,
+                on_step=False,
+                on_epoch=True,
+            )
+
+            self._update_metrics()
+
             self._batch_cache.clear()

@@ -32,7 +32,6 @@ class GleasonModel(ABC, LightningModule):
         self.criterion = nn.CrossEntropyLoss()
 
         macro_metrics = {
-            "cohen_kappa": MulticlassCohenKappa(num_classes=num_classes),
             "AUROC": MulticlassAUROC(num_classes=num_classes),
             "accuracy": MulticlassAccuracy(num_classes=num_classes),
             "precision": MulticlassPrecision(num_classes=num_classes),
@@ -40,14 +39,15 @@ class GleasonModel(ABC, LightningModule):
             "f1": MulticlassF1Score(num_classes=num_classes),
             "specificity": MulticlassSpecificity(num_classes=num_classes),
             "npv": MulticlassNegativePredictiveValue(num_classes=num_classes),
+            "cohen_kappa": MulticlassCohenKappa(
+                num_classes=num_classes,
+                weights="quadratic",
+            ),
         }
 
         per_class_metrics = {
             "AUROC_per_class": ClasswiseWrapper(
                 MulticlassAUROC(num_classes=num_classes, average=None),
-            ),
-            "accuracy_per_class": ClasswiseWrapper(
-                MulticlassAccuracy(num_classes=num_classes, average=None),
             ),
             "precision_per_class": ClasswiseWrapper(
                 MulticlassPrecision(num_classes=num_classes, average=None),
@@ -68,7 +68,10 @@ class GleasonModel(ABC, LightningModule):
             ),
         }
 
-        metrics = MetricCollection({**macro_metrics, **per_class_metrics})
+        metrics = MetricCollection(
+            {**macro_metrics, **per_class_metrics},
+            compute_groups=False,
+        )
 
         self.train_metrics = metrics.clone(prefix="train/")
         self.val_metrics = metrics.clone(prefix="validation/")
@@ -84,6 +87,11 @@ class GleasonModel(ABC, LightningModule):
 
     def _logits_to_prob(self, logits: Tensor) -> Tensor:
         return softmax(logits, dim=1)
+
+    def _log_metrics(self, metrics: MetricCollection) -> None:
+        computed = metrics.compute()
+        self.log_dict(computed, on_epoch=True, on_step=False)
+        metrics.reset()
 
     def _log_confusion_matrix(self, cm: MulticlassConfusionMatrix, stage: str) -> None:
         confusion_matrix = cm.compute()
@@ -123,10 +131,6 @@ class GleasonModel(ABC, LightningModule):
         self.train_cm.update(logits, targets)
         self.train_metrics.update(logits, targets)
 
-        self.log_dict(
-            self.train_metrics, batch_size=len(inputs), on_step=False, on_epoch=True
-        )
-
         return loss
 
     def validation_step(self, batch: LabeledSampleBatch) -> None:
@@ -145,8 +149,6 @@ class GleasonModel(ABC, LightningModule):
         self.val_cm.update(logits, targets)
         self.val_metrics.update(logits, targets)
 
-        self.log_dict(self.val_metrics, batch_size=len(inputs), on_epoch=True)
-
     def test_step(
         self, batch: LabeledSampleBatch, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
@@ -155,8 +157,6 @@ class GleasonModel(ABC, LightningModule):
 
         self.test_cm.update(logits, targets)
         self.test_metrics.update(logits, targets)
-
-        self.log_dict(self.test_metrics, batch_size=len(inputs), on_epoch=True)
 
         return self._logits_to_prob(logits)
 
@@ -167,12 +167,15 @@ class GleasonModel(ABC, LightningModule):
         return self._logits_to_prob(self(inputs))
 
     def on_train_epoch_end(self) -> None:
+        self._log_metrics(self.train_metrics)
         self._log_confusion_matrix(self.train_cm, "train")
 
     def on_validation_epoch_end(self) -> None:
+        self._log_metrics(self.val_metrics)
         self._log_confusion_matrix(self.val_cm, "validation")
 
     def on_test_epoch_end(self) -> None:
+        self._log_metrics(self.test_metrics)
         self._log_confusion_matrix(self.test_cm, "test")
 
     def configure_optimizers(self) -> Optimizer:
