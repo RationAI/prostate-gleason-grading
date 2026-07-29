@@ -12,3 +12,9 @@ shuffle: true
 num_workers: ???
 fold: null
 invert_fold_selection: false
+train:
+  apply_carcinoma_prediction_filter: True
+val:
+  apply_carcinoma_prediction_filter: False
+test:
+  apply_carcinoma_prediction_filter: False

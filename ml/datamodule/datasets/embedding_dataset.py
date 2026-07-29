@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, TypeVar, cast
+from typing import TypeVar, cast
 
 import torch
 from torch.utils.data import Dataset
@@ -13,19 +13,13 @@ T_co = TypeVar("T_co", covariant=True)
 
 
 class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
-    def __init__(
-        self,
-        slide: str,
-        tiles: SlideTiles,
-        embeddings_col: str,
-        label: torch.Tensor | None = None,
-    ) -> None:
+    def __init__(self, slide_tiles: SlideTiles, embeddings_col: str) -> None:
 
         super().__init__()
 
-        self.slide = slide
-        self.tiles = tiles
-        self.label = label
+        self.slide = slide_tiles.slide["stem"]
+        self.label = slide_tiles.slide_label
+        self.tiles = slide_tiles
         self.embeddings_col = embeddings_col
 
     def __len__(self) -> int:
@@ -33,16 +27,13 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
 
     def __getitem__(self, idx: int) -> LabeledSample | UnlabeledSample:
 
-        if not 0 <= idx < len(self):
-            raise IndexError(f"Slide {self.slide}: index out of range")
-
         tile = self.tiles[idx]
         embedding = torch.as_tensor(tile[self.embeddings_col])
         metadata = Metadata(slide=self.slide, x=tile["x"], y=tile["y"])
 
         return (
-            (embedding, metadata, self.label)
-            if self.label is not None
+            (embedding, metadata, self.tiles.tile_labels[idx])
+            if self.tiles.tile_labels is not None
             else (embedding, metadata)
         )
 
@@ -50,12 +41,13 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
 class EmbeddingsSlideDataset(FilterableDataset[T_co]):
     def __init__(
         self,
+        labeled: bool,
         embeddings_col: str,
         qc_and_tissue_thresholds: dict[str, float],
-        carcinoma_prediction_threshold: float | None = None,
+        carcinoma_prediction_threshold: float | None,
+        apply_carcinoma_prediction_filter: bool,
         uris: Iterable[str] | None = None,
         paths: Iterable[Path | str] | None = None,
-        mode: str | None = None,
         fold: int | None = None,
         invert_fold_selection: bool = False,
         labels_map: dict[str, int] | None = None,
@@ -64,51 +56,50 @@ class EmbeddingsSlideDataset(FilterableDataset[T_co]):
         self.embeddings_col = embeddings_col
 
         super().__init__(
+            labeled=labeled,
             qc_and_tissue_thresholds=qc_and_tissue_thresholds,
             carcinoma_prediction_threshold=carcinoma_prediction_threshold,
+            apply_carcinoma_prediction_filter=apply_carcinoma_prediction_filter,
             uris=uris,
             paths=paths,
-            mode=mode,
             fold=fold,
             invert_fold_selection=invert_fold_selection,
             labels_map=labels_map,
         )
 
-    def _generate_slide_dataset(
-        self,
-        slide: dict[str, Any],
-        tiles: SlideTiles,
-        label: torch.Tensor | None,
-    ) -> Dataset[T_co]:
+    def _generate_slide_dataset(self, slide_tiles: SlideTiles) -> Dataset[T_co]:
         return cast(
             "Dataset[T_co]",
-            EmbeddingsTileDataset(
-                slide=slide["stem"],
-                tiles=tiles,
-                label=label,
-                embeddings_col=self.embeddings_col,
-            ),
+            EmbeddingsTileDataset(slide_tiles, self.embeddings_col),
         )
 
 
 class LabeledEmbeddingsSlideDataset(EmbeddingsSlideDataset[LabeledSample]):
-    def get_labels(self) -> torch.Tensor:
+    def get_slide_labels(self) -> dict[str, torch.Tensor]:
 
         assert self.labeled, "SlideDataset is not labeled."
 
-        slide_labels: list[int] = []
-        slide_lengths: list[int] = []
+        labels: dict[str, torch.Tensor] = {}
 
         for dataset in self.datasets:
             slide = cast("EmbeddingsTileDataset", dataset)
-            assert slide.label is not None, f"Slide {slide.slide}: unknown label."
-            slide_labels.append(int(slide.label.item()))
-            slide_lengths.append(len(slide))
+            assert slide.label is not None
+            labels[slide.slide] = slide.label
 
-        return torch.repeat_interleave(
-            torch.tensor(slide_labels, dtype=torch.long),
-            torch.tensor(slide_lengths, dtype=torch.long),
-        )
+        return labels
+
+    def get_tile_labels(self) -> torch.Tensor:
+
+        assert self.labeled, "SlideDataset is not labeled."
+
+        labels: list[torch.Tensor] = []
+
+        for dataset in self.datasets:
+            slide = cast("EmbeddingsTileDataset", dataset)
+            assert slide.tiles.tile_labels is not None
+            labels.append(slide.tiles.tile_labels)
+
+        return torch.cat(labels) if labels else torch.tensor([], dtype=torch.long)
 
 
 class UnlabeledEmbeddingsSlideDataset(EmbeddingsSlideDataset[UnlabeledSample]): ...

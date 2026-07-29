@@ -58,11 +58,12 @@ class DataModule(LightningDataModule):
     ) -> MetaTiledSlides[LabeledSample] | MetaTiledSlides[UnlabeledSample]:
 
         fold = self.fold if mode in {"train", "val"} else None
+        invert = self.invert_fold_selection ^ (mode != "val")
+
         dataset = instantiate(
             self.datasets[mode],
-            mode=mode,
             fold=fold,
-            invert_fold_selection=self.invert_fold_selection,
+            invert_fold_selection=invert,
         )
 
         return (
@@ -85,10 +86,21 @@ class DataModule(LightningDataModule):
 
     def get_train_labels(self) -> torch.Tensor:
 
-        if hasattr(self.train, "get_labels") and callable(self.train.get_labels):
-            return self.train.get_labels()
+        if hasattr(self.train, "get_tile_labels") and callable(
+            self.train.get_tile_labels
+        ):
+            return self.train.get_tile_labels()
 
         raise RuntimeError("Train dataset does not provide labels.")
+
+    def get_val_labels(self) -> dict[str, torch.Tensor]:
+
+        if hasattr(self.val, "get_slide_labels") and callable(
+            self.val.get_slide_labels
+        ):
+            return self.val.get_slide_labels()
+
+        raise RuntimeError("Validation dataset does not provide labels.")
 
     def train_dataloader(self) -> Iterable[LabeledSampleBatch]:
         sampler = (
