@@ -6,8 +6,6 @@ from omegaconf import DictConfig, OmegaConf
 from rationai.mlkit import Trainer, autolog
 from rationai.mlkit.lightning.loggers import MLFlowLogger
 
-from ml.meta_arch import MetaArch
-
 
 OmegaConf.register_new_resolver(
     "random_seed", lambda: randint(0, 2**31), use_cache=True
@@ -21,7 +19,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
 
     data = hydra.utils.instantiate(config.datamodule, _recursive_=False)
 
-    model = hydra.utils.instantiate(config.model, _target_=MetaArch)
+    model = hydra.utils.instantiate(config.model)
 
     trainer = hydra.utils.instantiate(config.trainer, _target_=Trainer, logger=logger)
     getattr(trainer, config.mode)(model, datamodule=data, ckpt_path=config.checkpoint)

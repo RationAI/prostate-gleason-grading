@@ -10,7 +10,7 @@ from ml.datamodule.datasets.base import FilterableDataset
 from ml.typing import LabeledSample, Metadata, UnlabeledSample
 
 
-T = TypeVar("T", covariant=True)
+T_co = TypeVar("T_co", covariant=True)
 
 
 class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
@@ -48,7 +48,7 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
         )
 
 
-class EmbeddingsSlideDataset(FilterableDataset[T]):
+class EmbeddingsSlideDataset(FilterableDataset[T_co]):
     def __init__(
         self,
         embeddings_col: str,
@@ -80,9 +80,9 @@ class EmbeddingsSlideDataset(FilterableDataset[T]):
         slide: dict[str, Any],
         tiles: HFDataset,
         label: torch.Tensor | None,
-    ) -> Dataset[T]:
+    ) -> Dataset[T_co]:
         return cast(
-            "Dataset[T]",
+            "Dataset[T_co]",
             EmbeddingsTileDataset(
                 slide=slide["stem"],
                 tiles=tiles,

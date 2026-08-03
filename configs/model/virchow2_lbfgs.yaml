@@ -1,0 +1,18 @@
+defaults:
+  - _self_
+  - decode_head@decode_head: embedding_classifier
+
+_target_: ml.embedding_model.LBFGSEmbeddingsGleasonModel
+num_classes: 3
+lr: ???
+lbfgs_kwargs:
+  max_iter: ???
+  history_size: ???
+  tolerance_grad: ???
+  tolerance_change: ???
+weight_decay: ???
+cache_on_cpu: ???
+decode_head:
+  in_features: 2560
+  out_features: ${..num_classes}
+  dropout_probability: 0
