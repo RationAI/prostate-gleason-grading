@@ -1,17 +1,17 @@
 from collections.abc import Iterable
 from typing import Literal, cast, overload
 
-import torch
 from hydra.utils import instantiate
 from lightning import LightningDataModule
 from omegaconf import DictConfig
-from rationai.mlkit.data.datasets import MetaTiledSlides
 from torch.utils.data import DataLoader
 
+from ml.datamodule.datasets.base import (
+    LabeledSlideDataset,
+    UnlabeledSlideDataset,
+)
 from ml.typing import (
-    LabeledSample,
     LabeledSampleBatch,
-    UnlabeledSample,
     UnlabeledSampleBatch,
 )
 
@@ -46,16 +46,16 @@ class DataModule(LightningDataModule):
     @overload
     def _instantiate_dataset(
         self, mode: Literal["train", "val", "test"]
-    ) -> MetaTiledSlides[LabeledSample]: ...
+    ) -> LabeledSlideDataset: ...
 
     @overload
     def _instantiate_dataset(
         self, mode: Literal["predict"]
-    ) -> MetaTiledSlides[UnlabeledSample]: ...
+    ) -> UnlabeledSlideDataset: ...
 
     def _instantiate_dataset(
         self, mode: str
-    ) -> MetaTiledSlides[LabeledSample] | MetaTiledSlides[UnlabeledSample]:
+    ) -> LabeledSlideDataset | UnlabeledSlideDataset:
 
         fold = self.fold if mode in {"train", "val"} else None
         invert = self.invert_fold_selection ^ (mode != "val")
@@ -67,9 +67,9 @@ class DataModule(LightningDataModule):
         )
 
         return (
-            cast("MetaTiledSlides[UnlabeledSample]", dataset)
+            cast("UnlabeledSlideDataset", dataset)
             if mode == "predict"
-            else cast("MetaTiledSlides[LabeledSample]", dataset)
+            else cast("LabeledSlideDataset", dataset)
         )
 
     def setup(self, stage: str) -> None:
@@ -84,27 +84,9 @@ class DataModule(LightningDataModule):
             case "predict":
                 self.predict = self._instantiate_dataset("predict")
 
-    def get_train_labels(self) -> torch.Tensor:
-
-        if hasattr(self.train, "get_tile_labels") and callable(
-            self.train.get_tile_labels
-        ):
-            return self.train.get_tile_labels()
-
-        raise RuntimeError("Train dataset does not provide labels.")
-
-    def get_val_labels(self) -> dict[str, torch.Tensor]:
-
-        if hasattr(self.val, "get_slide_labels") and callable(
-            self.val.get_slide_labels
-        ):
-            return self.val.get_slide_labels()
-
-        raise RuntimeError("Validation dataset does not provide labels.")
-
     def train_dataloader(self) -> Iterable[LabeledSampleBatch]:
         sampler = (
-            instantiate(self.sampler, labels=self.get_train_labels())
+            instantiate(self.sampler, labels=self.train.get_tile_labels())
             if self.sampler is not None
             else None
         )
