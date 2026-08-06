@@ -11,7 +11,7 @@ dependencies = [
     "torchmetrics>=1.4.1",
     "rationai-sdk>=0.1.0",
     "rationai-tiling==1.1.1",
-    "ratiopath>=1.2.0",
+    "ratiopath>=1.4.2",
     "datasets>=4.0.0",
     "mlflow>=3.10.1",
     "rationai-mlkit>=0.4.1",
