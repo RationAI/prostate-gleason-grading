@@ -1,5 +1,4 @@
 _target_: ml.datamodule.datasets.LabeledEmbeddingsSlideDataset
-labeled: True
 uris: ???
 paths: ???
 embeddings_col: ???
