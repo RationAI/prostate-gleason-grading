@@ -17,6 +17,12 @@ from ml.typing import (
 
 
 class DataModule(LightningDataModule):
+
+    train: LabeledSlideDataset
+    val: LabeledSlideDataset
+    test: LabeledSlideDataset
+    predict: UnlabeledSlideDataset
+
     def __init__(
         self,
         batch_size: int,
