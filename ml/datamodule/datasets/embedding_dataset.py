@@ -59,8 +59,8 @@ class LabeledEmbeddingsTileDataset(LabeledTileDataset, EmbeddingsTileDatasetMixi
 
 class UnlabeledEmbeddingsSlideDataset(UnlabeledSlideDataset):
     def __init__(self, embeddings_col: str, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
         self.embeddings_col = embeddings_col
+        super().__init__(**kwargs)
 
     def _generate_tile_dataset(
         self, slide: Slide, tiles: Tiles
@@ -70,8 +70,8 @@ class UnlabeledEmbeddingsSlideDataset(UnlabeledSlideDataset):
 
 class LabeledEmbeddingsSlideDataset(LabeledSlideDataset):
     def __init__(self, embeddings_col: str, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
         self.embeddings_col = embeddings_col
+        super().__init__(**kwargs)
 
     def _generate_tile_dataset(
         self,
