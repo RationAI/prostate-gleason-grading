@@ -7,7 +7,7 @@ dataset:
     residual_percentage: 0.25
     blur_percentage: 0.25
     folding_percentage: 0.25
-  carcinoma_prediction_threshold: ???
+  carcinoma_prediction_threshold: null
   mlflow_uris:
     embeddings:
       virchow2_tiling_val: "mlflow-artifacts:/65/4f7cbb5b066143048e004001cbc86570/artifacts/MMCI TL Val_sharded"
