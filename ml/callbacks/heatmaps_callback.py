@@ -142,17 +142,18 @@ class HeatmapCallback(MultiloaderLifecycle, ABC):
 
         mppx, mppy = self._slide["mpp_x"], self._slide["mpp_y"]
 
+        logger = cast("MLFlowLogger", trainer.logger)
+
         if self.save_dir is not None:
             mask_path = f"{self.save_dir}/{mask_name}"
             write_big_tiff(mask_vips, Path(mask_path), mppx, mppy)
+            logger.log_artifact(mask_path, artifact_path=self.save_artifact_path)
 
         else:
             with TemporaryDirectory() as tmp_dir:
                 mask_path = f"{tmp_dir}/{mask_name}"
                 write_big_tiff(mask_vips, Path(mask_path), mppx, mppy)
-
-        logger = cast("MLFlowLogger", trainer.logger)
-        logger.log_artifact(mask_path, artifact_path=self.save_artifact_path)
+                logger.log_artifact(mask_path, artifact_path=self.save_artifact_path)
 
         self._mask_builder.cleanup()
 
