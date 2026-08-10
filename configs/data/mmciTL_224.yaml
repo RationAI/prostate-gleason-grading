@@ -1,0 +1,14 @@
+# @package _global_
+
+dataset:
+  name: MMCI TL
+  thresholds:
+    tissue_roi_percentage: 0.5
+    residual_percentage: 0.25
+    blur_percentage: 0.25
+    folding_percentage: 0.25
+  carcinoma_prediction_threshold: ???
+  mlflow_uris:
+    embeddings:
+      virchow2_tiling_val: "mlflow-artifacts:/65/4f7cbb5b066143048e004001cbc86570/artifacts/MMCI TL Val_sharded"
+      virchow2_tiling_test: "mlflow-artifacts:/65/20ceeaf225294dbe98b554e678dce688/artifacts/MMCI TL Test_sharded"

@@ -6,6 +6,8 @@ defaults:
 
 mode: fit
 
+checkpoint: null
+
 model_name: ???
 
 data:

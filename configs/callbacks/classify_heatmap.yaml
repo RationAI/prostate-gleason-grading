@@ -1,0 +1,5 @@
+# @package callbacks.class_heatmaps
+
+_target_: ml.callbacks.heatmaps_callback.ClassifyHeatmapCallback
+save_artifact_path: "heatmaps/class"
+save_dir: null

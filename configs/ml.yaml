@@ -5,7 +5,7 @@ defaults:
 
 seed: ${random_seed:}
 mode: ???
-checkpoint: null
+checkpoint: ???
 
 callbacks: {}
 

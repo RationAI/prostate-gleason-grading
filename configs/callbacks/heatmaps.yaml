@@ -1,3 +1,0 @@
-# @package callbacks.heatmaps
-
-_target_: ml.callbacks.heatmaps_callback.HeatmapCallback

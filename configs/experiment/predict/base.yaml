@@ -1,0 +1,18 @@
+# @package _global_
+
+defaults:
+  - /callbacks/classify_heatmap
+  - /callbacks/cond_prob_heatmap
+  - /callbacks/raw_prob_heatmap
+
+mode: predict
+
+model_name: ???
+
+data:
+  dataset:
+    name: ???
+
+metadata:
+  run_name: "$Predictions - {model_name} ${data.dataset.name}"
+  description: "${model_name} model predictions on ${data.dataset.name} dataset"

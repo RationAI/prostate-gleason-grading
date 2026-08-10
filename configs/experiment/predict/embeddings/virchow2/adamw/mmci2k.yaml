@@ -1,0 +1,13 @@
+# @package _global_
+
+defaults:
+  - /experiment/predict/embeddings/virchow2/adamw/base
+  - /data/mmci2k_224@data
+  - _self_
+
+datamodule:
+
+  predict:
+    uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits_mixed_gs}/test"]
+    paths: null
+    embeddings_col: virchow2_embedding
