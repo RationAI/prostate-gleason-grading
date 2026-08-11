@@ -1,10 +1,10 @@
-from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import numpy as np
+import pyvips
 import torch
 from lightning import LightningModule, Trainer
 from rationai.mlkit.lightning.callbacks import MultiloaderLifecycle
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from ml.datamodule.datasets.base import TileDataset
 
 
-class HeatmapCallback(MultiloaderLifecycle, ABC):
+class HeatmapCallback(MultiloaderLifecycle):
     def __init__(
         self,
         save_artifact_path: str = "heatmaps",
@@ -37,17 +37,15 @@ class HeatmapCallback(MultiloaderLifecycle, ABC):
         self._slide: dict[str, Any]
         self._mask_builder: MaskBuilder
 
-    @abstractmethod
     def num_channels(self, num_output_classes: int) -> int:
-        pass
+        return num_output_classes
 
-    @abstractmethod
     def _process_batch(
         self,
         probs: np.ndarray,
         coords: np.ndarray,
     ) -> tuple[np.ndarray, np.ndarray]:
-        pass
+        return probs, coords
 
     def on_predict_dataloader_start(
         self, trainer: Trainer, pl_module: LightningModule, dataloader_idx: int
@@ -133,13 +131,8 @@ class HeatmapCallback(MultiloaderLifecycle, ABC):
 
     def _on_dataloader_end(self, trainer: Trainer) -> None:
 
-        mask = self._mask_builder.finalize()["mask"]
-        mask = (mask * 255).clip(0, 255).astype(np.uint8)
-
-        mask_vips = self._mask_builder.resize_to_source(mask, kernel="nearest")
-
+        mask_vips = self._prepare_mask()
         mask_name = f"{self._slide['stem']}.tiff"
-
         mppx, mppy = self._slide["mpp_x"], self._slide["mpp_y"]
 
         if self.save_dir is not None:
@@ -156,17 +149,13 @@ class HeatmapCallback(MultiloaderLifecycle, ABC):
 
         self._mask_builder.cleanup()
 
+    def _prepare_mask(self) -> pyvips.Image:
+        mask = self._mask_builder.finalize()["mask"]
+        mask = (mask * 255).clip(0, 255).astype(np.uint8)
+        return self._mask_builder.resize_to_source(mask, kernel="nearest")
 
-class RawProbabilityHeatmapCallback(HeatmapCallback):
-    def num_channels(self, num_output_classes: int) -> int:
-        return num_output_classes
 
-    def _process_batch(
-        self,
-        probs: np.ndarray,
-        coords: np.ndarray,
-    ) -> tuple[np.ndarray, np.ndarray]:
-        return probs, coords
+class RawProbabilityHeatmapCallback(HeatmapCallback): ...
 
 
 class ConditionalProbabilityHeatmapCallback(HeatmapCallback):
@@ -178,9 +167,10 @@ class ConditionalProbabilityHeatmapCallback(HeatmapCallback):
     ) -> None:
         super().__init__(save_artifact_path, save_dir)
         if eps <= 0:
-            raise ValueError()
+            raise ValueError("eps must be greater than 0")
         self.eps = eps
 
+    @override
     def num_channels(self, num_output_classes: int) -> int:
         if num_output_classes != 3:
             raise ValueError(
@@ -189,6 +179,7 @@ class ConditionalProbabilityHeatmapCallback(HeatmapCallback):
             )
         return 2
 
+    @override
     def _process_batch(
         self,
         probs: np.ndarray,
@@ -196,11 +187,9 @@ class ConditionalProbabilityHeatmapCallback(HeatmapCallback):
     ) -> tuple[np.ndarray, np.ndarray]:
 
         carcinoma_prob = 1 - probs[:, 0]
-
         bit_mask = carcinoma_prob > self.eps
 
         probs = probs[bit_mask]
-
         carcinoma_prob = carcinoma_prob[bit_mask]
         gp4_prob = probs[:, 2] / carcinoma_prob
 
@@ -208,14 +197,15 @@ class ConditionalProbabilityHeatmapCallback(HeatmapCallback):
 
 
 class ClassifyHeatmapCallback(HeatmapCallback):
-    def num_channels(self, num_output_classes: int) -> int:
-        return 1
+    @override
+    def _prepare_mask(self) -> pyvips.Image:
+        prob_mask = self._mask_builder.finalize()["mask"]
 
-    def _process_batch(
-        self,
-        probs: np.ndarray,
-        coords: np.ndarray,
-    ) -> tuple[np.ndarray, np.ndarray]:
-        classes = np.argmax(probs, axis=1) / (probs.shape[1] - 1)
-        classes = classes[:, np.newaxis, ...]
-        return classes, coords
+        num_classes = prob_mask.shape[0]
+        if num_classes <= 1:
+            raise ValueError("Number of classes must be at least two.")
+
+        class_mask = np.expand_dims(np.argmax(prob_mask, axis=0), axis=0)
+        class_mask = class_mask / (num_classes - 1)
+        class_mask = (class_mask * 255).clip(0, 255).astype(np.uint8)
+        return self._mask_builder.resize_to_source(class_mask, kernel="nearest")
