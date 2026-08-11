@@ -62,12 +62,11 @@ class DataModule(LightningDataModule):
         self, mode: str
     ) -> LabeledSlideDataset | UnlabeledSlideDataset:
 
-        fold = self.fold if mode in {"train", "val"} else None
         invert = self.invert_fold_selection ^ (mode != "val")
 
         dataset = instantiate(
             self.datasets[mode],
-            fold=fold,
+            fold=self.fold,
             invert_fold_selection=invert,
         )
 
