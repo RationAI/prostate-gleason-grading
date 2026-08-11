@@ -10,4 +10,4 @@ datamodule:
   predict:
     uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_val}"]
     paths: null
-    embeddings_col: virchow2_embedding
+    embeddings_col: embedding
