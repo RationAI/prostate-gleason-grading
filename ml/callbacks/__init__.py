@@ -1,3 +1,4 @@
+from ml.callbacks.aggregation_callback import AggregationCallback
 from ml.callbacks.heatmaps_callback import (
     ClassifyHeatmapCallback,
     ConditionalProbabilityHeatmapCallback,
@@ -6,6 +7,7 @@ from ml.callbacks.heatmaps_callback import (
 
 
 __all__ = [
+    "AggregationCallback",
     "ClassifyHeatmapCallback",
     "ConditionalProbabilityHeatmapCallback",
     "RawProbabilityHeatmapCallback",

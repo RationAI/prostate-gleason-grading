@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-from typing import Literal, cast, overload
 
 from hydra.utils import instantiate
 from lightning import LightningDataModule
@@ -18,9 +17,11 @@ from ml.typing import (
 
 class DataModule(LightningDataModule):
     train: LabeledSlideDataset
-    val: LabeledSlideDataset
-    test: LabeledSlideDataset
     predict: UnlabeledSlideDataset
+    val_tl: LabeledSlideDataset
+    val_sl: LabeledSlideDataset | None
+    test_tl: LabeledSlideDataset
+    test_sl: LabeledSlideDataset | None
 
     def __init__(
         self,
@@ -28,8 +29,6 @@ class DataModule(LightningDataModule):
         drop_last: bool,
         shuffle: bool,
         sampler: DictConfig | None = None,
-        fold: int | None = None,
-        invert_fold_selection: bool = False,
         num_workers: int = 0,
         **datasets: DictConfig,
     ) -> None:
@@ -37,56 +36,26 @@ class DataModule(LightningDataModule):
         super().__init__()
 
         self.datasets = datasets
-
-        self.fold = fold
-        self.invert_fold_selection = invert_fold_selection
-
         self.drop_last = drop_last
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.sampler = sampler
-
         self.num_workers = num_workers
-
-    @overload
-    def _instantiate_dataset(
-        self, mode: Literal["train", "val", "test"]
-    ) -> LabeledSlideDataset: ...
-
-    @overload
-    def _instantiate_dataset(
-        self, mode: Literal["predict"]
-    ) -> UnlabeledSlideDataset: ...
-
-    def _instantiate_dataset(
-        self, mode: str
-    ) -> LabeledSlideDataset | UnlabeledSlideDataset:
-
-        invert = self.invert_fold_selection ^ (mode != "val")
-
-        dataset = instantiate(
-            self.datasets[mode],
-            fold=self.fold,
-            invert_fold_selection=invert,
-        )
-
-        return (
-            cast("UnlabeledSlideDataset", dataset)
-            if mode == "predict"
-            else cast("LabeledSlideDataset", dataset)
-        )
 
     def setup(self, stage: str) -> None:
         match stage:
             case "fit":
-                self.train = self._instantiate_dataset("train")
-                self.val = self._instantiate_dataset("val")
+                self.train = instantiate(self.datasets["train"])
+                self.val_tl = instantiate(self.datasets["val_tl"])
+                self.val_sl = instantiate(self.datasets.get("val_sl"))
             case "validate":
-                self.val = self._instantiate_dataset("val")
+                self.val_tl = instantiate(self.datasets["val_tl"])
+                self.val_sl = instantiate(self.datasets.get("val_sl"))
             case "test":
-                self.test = self._instantiate_dataset("test")
+                self.test_tl = instantiate(self.datasets["test_tl"])
+                self.test_sl = instantiate(self.datasets.get("test_sl"))
             case "predict":
-                self.predict = self._instantiate_dataset("predict")
+                self.predict = instantiate(self.datasets["predict"])
 
     def train_dataloader(self) -> Iterable[LabeledSampleBatch]:
         sampler = (
@@ -104,21 +73,32 @@ class DataModule(LightningDataModule):
             persistent_workers=self.num_workers > 0,
         )
 
-    def val_dataloader(self) -> Iterable[LabeledSampleBatch]:
-        return DataLoader(
-            self.val,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            persistent_workers=self.num_workers > 0,
-        )
+    def _get_dataloaders(
+        self,
+        dataset_tl: LabeledSlideDataset,
+        dataset_sl: LabeledSlideDataset | None,
+    ) -> list[Iterable[LabeledSampleBatch]]:
+
+        dataloaders: list[Iterable[LabeledSampleBatch]] = [
+            DataLoader(
+                dataset_tl,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                persistent_workers=self.num_workers > 0,
+            )
+        ]
+
+        if dataset_sl is not None:
+            for dataset in dataset_sl.datasets:
+                dataloaders.append(DataLoader(dataset, batch_size=self.batch_size))
+
+        return dataloaders
+
+    def val_dataloader(self) -> list[Iterable[LabeledSampleBatch]]:
+        return self._get_dataloaders(self.val_tl, self.val_sl)
 
     def test_dataloader(self) -> list[Iterable[LabeledSampleBatch]]:
-        return [
-            DataLoader(
-                dataset, batch_size=self.batch_size, num_workers=self.num_workers
-            )
-            for dataset in self.test.datasets
-        ]
+        return self._get_dataloaders(self.test_tl, self.test_sl)
 
     def predict_dataloader(self) -> list[Iterable[UnlabeledSampleBatch]]:
         return [

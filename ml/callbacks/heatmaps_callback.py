@@ -47,15 +47,16 @@ class HeatmapCallback(MultiloaderLifecycle):
     ) -> tuple[np.ndarray, np.ndarray]:
         return probs, coords
 
+    def on_test_dataloader_start(
+        self, trainer: Trainer, pl_module: LightningModule, dataloader_idx: int
+    ) -> None:
+        if dataloader_idx != 0:
+            self._on_dataloader_start("test_sl", trainer, pl_module, dataloader_idx - 1)
+
     def on_predict_dataloader_start(
         self, trainer: Trainer, pl_module: LightningModule, dataloader_idx: int
     ) -> None:
         self._on_dataloader_start("predict", trainer, pl_module, dataloader_idx)
-
-    def on_test_dataloader_start(
-        self, trainer: Trainer, pl_module: LightningModule, dataloader_idx: int
-    ) -> None:
-        self._on_dataloader_start("test", trainer, pl_module, dataloader_idx)
 
     def _on_dataloader_start(
         self,
@@ -81,6 +82,20 @@ class HeatmapCallback(MultiloaderLifecycle):
             aggregation=MeanAggregator,
         )
 
+    def on_test_batch_end(
+        self,
+        trainer: Trainer,
+        pl_module: LightningModule,
+        outputs: torch.Tensor | Mapping[str, Any] | None,
+        batch: LabeledSampleBatch,
+        batch_idx: int,
+        dataloader_idx: int = 0,
+    ) -> None:
+        if dataloader_idx != 0:
+            _, metadata, _ = batch
+            assert isinstance(outputs, torch.Tensor)
+            self._on_batch_end(outputs, metadata)
+
     def on_predict_batch_end(
         self,
         trainer: Trainer,
@@ -91,19 +106,6 @@ class HeatmapCallback(MultiloaderLifecycle):
         dataloader_idx: int = 0,
     ) -> None:
         _, metadata = batch
-        self._on_batch_end(outputs, metadata)
-
-    def on_test_batch_end(
-        self,
-        trainer: Trainer,
-        pl_module: LightningModule,
-        outputs: torch.Tensor | Mapping[str, Any] | None,
-        batch: LabeledSampleBatch,
-        batch_idx: int,
-        dataloader_idx: int = 0,
-    ) -> None:
-        _, metadata, _ = batch
-        assert isinstance(outputs, torch.Tensor)
         self._on_batch_end(outputs, metadata)
 
     def _on_batch_end(self, outputs: torch.Tensor, metadata: MetadataBatch) -> None:
@@ -122,7 +124,8 @@ class HeatmapCallback(MultiloaderLifecycle):
     def on_test_dataloader_end(
         self, trainer: Trainer, pl_module: LightningModule, dataloader_idx: int
     ) -> None:
-        self._on_dataloader_end(trainer)
+        if dataloader_idx != 0:
+            self._on_dataloader_end(trainer)
 
     def on_predict_dataloader_end(
         self, trainer: Trainer, pl_module: LightningModule, dataloader_idx: int
