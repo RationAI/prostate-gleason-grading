@@ -11,3 +11,5 @@ datamodule:
     uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_val}"]
     paths: null
     embeddings_col: embedding
+    fold: ${fold}
+    invert_fold_selection: ${invert_fold_selection}

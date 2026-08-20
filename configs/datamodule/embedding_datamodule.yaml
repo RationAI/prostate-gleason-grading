@@ -1,7 +1,9 @@
 defaults:
   - datasets@train: embeddings/labeled
-  - datasets@val: embeddings/labeled
-  - datasets@test: embeddings/labeled
+  - datasets@val_tl: embeddings/labeled
+  - datasets@val_sl: embeddings/labeled
+  - datasets@test_tl: embeddings/labeled
+  - datasets@test_sl: embeddings/labeled
   - datasets@predict: embeddings/unlabeled
   - samplers@sampler: stratified_weighted_random
 
@@ -10,11 +12,13 @@ batch_size: ???
 drop_last: true
 shuffle: true
 num_workers: ???
-fold: null
-invert_fold_selection: false
 train:
   apply_carcinoma_prediction_filter: True
-val:
+val_tl:
+  apply_carcinoma_prediction_filter: True
+val_sl:
   apply_carcinoma_prediction_filter: False
-test:
+test_tl:
+  apply_carcinoma_prediction_filter: True
+test_sl:
   apply_carcinoma_prediction_filter: False

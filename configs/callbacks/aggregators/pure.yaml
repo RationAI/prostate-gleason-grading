@@ -1,0 +1,6 @@
+defaults:
+  - binary@binary_aggregator: mean_pool_top_k
+  - gleason_pattern@pattern_aggregator: argmax_classify
+  - _self_
+
+_target_: ml.aggregators.gleason_score_aggregator.PureGleasonScoreAggregator

@@ -5,6 +5,9 @@ defaults:
   - /datamodule/embedding_datamodule@datamodule
   - _self_
 
+fold: null
+invert_fold_selection: False
+
 datamodule:
   batch_size: 1024
   num_workers: 2
@@ -13,4 +16,4 @@ datamodule:
   sampler: null
 
 metadata:
-  run_name: "Predictions - ${model_name} ${data.dataset.name} fold=${datamodule.fold} inverse=${datamodule.invert_fold_selection}"
+  run_name: "Predictions - ${model_name} ${data.dataset.name} fold=${fold} inverse=${invert_fold_selection}"

@@ -8,6 +8,3 @@ defaults:
 datamodule:
   batch_size: 1024
   num_workers: 8
-
-metadata:
-  run_name: "${model_name} ${data.dataset.name} fold=${datamodule.fold} inverse=${datamodule.invert_fold_selection} seed=${seed}"

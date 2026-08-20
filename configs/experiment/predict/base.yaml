@@ -1,9 +1,16 @@
 # @package _global_
 
 defaults:
+  - /callbacks/aggregation
   - /callbacks/classify_heatmap
   - /callbacks/cond_prob_heatmap
   - /callbacks/raw_prob_heatmap
+  - _self_
+  - /callbacks/aggregators@callbacks.aggregation.aggregators.mixed_aggregator: mixed
+
+callbacks:
+  aggregation:
+    log_table: True
 
 mode: predict
 

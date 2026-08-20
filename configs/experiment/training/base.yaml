@@ -1,8 +1,10 @@
 # @package _global_
 
 defaults:
+  - /callbacks/aggregation
   - /callbacks/checkpointing
   - /callbacks/early_stopping
+  - /callbacks/aggregators@callbacks.aggregation.aggregators.pure_aggregator: pure
 
 mode: fit
 

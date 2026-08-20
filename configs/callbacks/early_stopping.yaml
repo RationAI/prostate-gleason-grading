@@ -1,6 +1,6 @@
 # @package callbacks.early_stopping
 
 _target_: lightning.pytorch.callbacks.EarlyStopping
-monitor: validation/loss
+monitor: val/loss
 mode: min
 patience: 10

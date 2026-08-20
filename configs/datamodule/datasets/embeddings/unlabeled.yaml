@@ -2,4 +2,6 @@ _target_: ml.datamodule.datasets.UnlabeledEmbeddingsSlideDataset
 uris: ???
 paths: ???
 embeddings_col: ???
+fold: ???
+invert_fold_selection: ???
 qc_and_tissue_thresholds: ${data.dataset.thresholds}

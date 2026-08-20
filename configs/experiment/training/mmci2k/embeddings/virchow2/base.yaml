@@ -4,14 +4,30 @@ defaults:
   - /experiment/training/mmci2k/embeddings/base
   - _self_
 
+fold: ???
+
 datamodule:
 
   train:
     uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/train"]
     paths: null
     embeddings_col: virchow2_embedding
+    fold: ${..fold}
+    invert_fold_selection: True
 
-  val:
+  val_tl:
     uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/train"]
     paths: null
     embeddings_col: virchow2_embedding
+    fold: ${..fold}
+    invert_fold_selection: False
+
+  val_sl:
+    uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/train"]
+    paths: null
+    embeddings_col: virchow2_embedding
+    fold: ${..fold}
+    invert_fold_selection: False
+
+metadata:
+  run_name: "${model_name} ${data.dataset.name} fold=${fold} inverse=${datamodule.train.invert_fold_selection} seed=${seed}"

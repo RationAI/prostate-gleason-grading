@@ -7,8 +7,6 @@ defaults:
 
 callbacks:
   early_stopping: null
-  checkpointing:
-    save_top_k: 0
 
 model_name: "Virchow2 (LBFGS)"
 
@@ -41,4 +39,4 @@ trainer:
   check_val_every_n_epoch: 1
 
 metadata:
-  run_name: "${model_name} ${data.dataset.name} fold=${datamodule.fold} inverse=${datamodule.invert_fold_selection} wd=${model.weight_decay} seed=${seed}"
+  run_name: "${model_name} ${data.dataset.name} fold=${fold} inverse=${datamodule.train.invert_fold_selection} wd=${model.weight_decay} seed=${seed}"

@@ -1,0 +1,3 @@
+_target_: ml.aggregators.binary_aggregators.MeanPoolMaxBinaryAggregator
+kernel_size: 3
+threshold: 0.5
