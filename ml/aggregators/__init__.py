@@ -1,4 +1,12 @@
-from ml.aggregators.base import Aggregator
+from ml.aggregators.base import (
+    GleasonScoreAggregator,
+    MixedGleasonScoreAggregator,
+    PureGleasonScoreAggregator,
+)
 
 
-__all__ = ["Aggregator"]
+__all__ = [
+    "GleasonScoreAggregator",
+    "MixedGleasonScoreAggregator",
+    "PureGleasonScoreAggregator",
+]
