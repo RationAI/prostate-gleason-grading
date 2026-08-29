@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-from typing import Literal, cast, overload
 
 from hydra.utils import instantiate
 from lightning import LightningDataModule
@@ -28,8 +27,6 @@ class DataModule(LightningDataModule):
         drop_last: bool,
         shuffle: bool,
         sampler: DictConfig | None = None,
-        fold: int | None = None,
-        invert_fold_selection: bool = False,
         num_workers: int = 0,
         **datasets: DictConfig,
     ) -> None:
@@ -37,56 +34,23 @@ class DataModule(LightningDataModule):
         super().__init__()
 
         self.datasets = datasets
-
-        self.fold = fold
-        self.invert_fold_selection = invert_fold_selection
-
         self.drop_last = drop_last
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.sampler = sampler
-
         self.num_workers = num_workers
-
-    @overload
-    def _instantiate_dataset(
-        self, mode: Literal["train", "val", "test"]
-    ) -> LabeledSlideDataset: ...
-
-    @overload
-    def _instantiate_dataset(
-        self, mode: Literal["predict"]
-    ) -> UnlabeledSlideDataset: ...
-
-    def _instantiate_dataset(
-        self, mode: str
-    ) -> LabeledSlideDataset | UnlabeledSlideDataset:
-
-        invert = self.invert_fold_selection ^ (mode != "val")
-
-        dataset = instantiate(
-            self.datasets[mode],
-            fold=self.fold,
-            invert_fold_selection=invert,
-        )
-
-        return (
-            cast("UnlabeledSlideDataset", dataset)
-            if mode == "predict"
-            else cast("LabeledSlideDataset", dataset)
-        )
 
     def setup(self, stage: str) -> None:
         match stage:
             case "fit":
-                self.train = self._instantiate_dataset("train")
-                self.val = self._instantiate_dataset("val")
+                self.train = instantiate(self.datasets["train"])
+                self.val = instantiate(self.datasets["val"])
             case "validate":
-                self.val = self._instantiate_dataset("val")
+                self.val = instantiate(self.datasets["val"])
             case "test":
-                self.test = self._instantiate_dataset("test")
+                self.test = instantiate(self.datasets["test"])
             case "predict":
-                self.predict = self._instantiate_dataset("predict")
+                self.predict = instantiate(self.datasets["predict"])
 
     def train_dataloader(self) -> Iterable[LabeledSampleBatch]:
         sampler = (
