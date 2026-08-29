@@ -17,7 +17,6 @@ from ml.typing import (
 
 
 class DataModule(LightningDataModule):
-
     train: LabeledSlideDataset
     val: LabeledSlideDataset
     test: LabeledSlideDataset
