@@ -7,21 +7,11 @@ defaults:
 
 callbacks:
   early_stopping: null
-  checkpointing:
-    save_top_k: 0
 
 model_name: "Virchow2 (LBFGS)"
 
 model:
-  lr: 1
   weight_decay: ???
-  cache_on_cpu: true
-  early_stopping: true
-  lbfgs_kwargs:
-    max_iter: 20
-    history_size: 100
-    tolerance_grad: 1.0e-7
-    tolerance_change: 1.0e-9
 
 datamodule:
   drop_last: false

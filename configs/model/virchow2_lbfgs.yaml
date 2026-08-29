@@ -6,12 +6,12 @@ _target_: ml.embedding_model.LBFGSEmbeddingsGleasonModel
 num_classes: 3
 weight_decay: ???
 lbfgs_kwargs:
-  max_iter: ???
-  history_size: ???
-  tolerance_grad: ???
-  tolerance_change: ???
-cache_on_cpu: ???
-early_stopping: ???
+  max_iter: 20
+  history_size: 100
+  tolerance_grad: 1.0e-7
+  tolerance_change: 1.0e-9
+cache_on_cpu: true
+early_stopping: true
 decode_head:
   in_features: 2560
   out_features: ${..num_classes}
