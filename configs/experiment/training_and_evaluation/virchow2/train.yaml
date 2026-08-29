@@ -1,0 +1,8 @@
+# @package _global_
+
+defaults:
+  - /experiment/training_and_evaluation/virchow2/data: ???
+  - /experiment/training_and_evaluation/virchow2/model: ???
+  - _self_
+
+mode: fit

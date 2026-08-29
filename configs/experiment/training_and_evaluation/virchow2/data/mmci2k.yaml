@@ -2,12 +2,14 @@
 
 defaults:
   - /data/mmci2k_224@data
-  - /experiment/training/mmci2k/embeddings/base
+  - /datamodule/embedding_datamodule@datamodule
   - _self_
 
 validation_fold: ???
 
 datamodule:
+  batch_size: 1024
+  num_workers: 8
   train:
     uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/train"]
     paths: null
@@ -19,4 +21,10 @@ datamodule:
     paths: null
     embeddings_col: virchow2_embedding
     fold: ${validation_fold}
+    invert_fold_selection: False
+  test:
+    uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/test"]
+    paths: null
+    embeddings_col: virchow2_embedding
+    fold: null
     invert_fold_selection: False

@@ -1,18 +1,24 @@
 defaults:
   - base
   - _self_
-
+  - /experiment: ???
 
 seed: ${random_seed:}
+
 mode: ???
+
+model: {}
+model_name: ???
 checkpoint: null
 
 callbacks: {}
-
 trainer: {}
 
 datamodule: {}
+data:
+  dataset:
+    name: ???
 
-data: {}
-
-model: {}
+metadata:
+  run_name: "Stage=${mode} Model=${model_name} Data=${data.dataset.name} Seed=${seed}"
+  description: "Stage=${mode} Model=${model_name} Data=${data.dataset.name} Seed=${seed}"

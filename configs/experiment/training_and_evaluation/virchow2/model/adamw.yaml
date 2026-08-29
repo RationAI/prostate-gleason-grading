@@ -1,0 +1,22 @@
+# @package _global_
+
+defaults:
+  - /model/virchow2_adamw@model
+  - /callbacks/checkpointing
+  - /callbacks/early_stopping
+  - _self_
+
+trainer:
+  enable_checkpointing: True
+  enable_progress_bar: True
+  enable_model_summary: True
+  log_every_n_steps: 5
+  val_check_interval: 0.2
+
+model_name: "Virchow2-AdamW"
+model:
+  lr: ???
+  weight_decay: ???
+
+metadata:
+  run_name: "Stage=${mode} Model=${model_name} Data=${data.dataset.name} ValidationFold=${validation_fold} WD=${model.weight_decay} LR=${model.lr} Seed=${seed}"

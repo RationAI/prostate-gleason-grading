@@ -12,6 +12,6 @@ submit_job(
         "git clone https://github.com/RationAI/prostate-gleason-grading.git workdir",
         "cd workdir",
         "uv sync",
-        "uv run -m preprocessing.attach_embeddings +experiment=preprocessing/mmci2k_224_attach_virchow2_embeddings",
+        "uv run -m preprocessing.attach_embeddings +experiment=preprocessing/mmci2k/attach_virchow2_embeddings",
     ],
 )
