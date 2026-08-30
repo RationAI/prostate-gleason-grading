@@ -5,6 +5,8 @@ defaults:
   - /datamodule/embedding_datamodule@datamodule
   - _self_
 
+data_info: ""
+
 datamodule:
   batch_size: 1024
   num_workers: 8

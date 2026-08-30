@@ -11,3 +11,9 @@ defaults:
 mode: predict
 
 checkpoint: ???
+
+model_name: ???
+
+metadata:
+  run_name: "HEATMAPS: ${model_name} ${data.dataset.name}"
+  description: "HEATMAPS: ${model_name} ${data.dataset.name}"

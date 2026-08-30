@@ -8,3 +8,11 @@ defaults:
 mode: fit
 
 checkpoint: null
+
+data_info: ???
+model_name: ???
+hparams: ???
+
+metadata:
+  run_name: "TRAIN: ${model_name} ${hparams} ${data.dataset.name} ${data_info} Seed=${seed}"
+  description: "TRAIN: ${model_name} ${hparams} ${data.dataset.name} ${data_info} Seed=${seed}"

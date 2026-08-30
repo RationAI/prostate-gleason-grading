@@ -14,9 +14,7 @@ trainer:
   val_check_interval: 0.2
 
 model_name: "Virchow2-AdamW"
+hparams: "WD=${model.weight_decay} LR=${model.lr}"
 model:
   lr: ???
   weight_decay: ???
-
-metadata:
-  run_name: "Stage=${mode} Model=${model_name} Data=${data.dataset.name} ValidationFold=${validation_fold} WD=${model.weight_decay} LR=${model.lr} Seed=${seed}"

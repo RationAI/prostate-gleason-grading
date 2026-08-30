@@ -18,7 +18,3 @@ datamodule: {}
 data:
   dataset:
     name: ???
-
-metadata:
-  run_name: "Stage=${mode} Model=${model_name} Data=${data.dataset.name} Seed=${seed}"
-  description: "Stage=${mode} Model=${model_name} Data=${data.dataset.name} Seed=${seed}"

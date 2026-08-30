@@ -5,6 +5,8 @@ defaults:
   - /datamodule/embedding_datamodule@datamodule
   - _self_
 
+data_info: "ValFold=${validation_fold}"
+
 validation_fold: ???
 
 datamodule:
