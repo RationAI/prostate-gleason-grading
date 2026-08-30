@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 import lightning as pl
 import torch
 from torch import Tensor, nn
-from torch.optim import LBFGS, Optimizer
+from torch.optim import LBFGS, AdamW, Optimizer
 
 from ml.base import GleasonModel
 from ml.modeling.decode_head.base import Classifier
@@ -15,25 +15,43 @@ if TYPE_CHECKING:
 
 
 class EmbeddingGleasonModel(GleasonModel):
-    def __init__(
-        self,
-        num_classes: int,
-        lr: float,
-        decode_head: Classifier,
-    ) -> None:
-
-        super().__init__(num_classes, lr)
+    def __init__(self, num_classes: int, decode_head: Classifier) -> None:
+        super().__init__(num_classes)
         self.decode_head = decode_head
 
     def forward(self, x: Tensor) -> Tensor:
         return self.decode_head(x)
 
 
+class AdamWEmbeddingGleasonModel(EmbeddingGleasonModel):
+    def __init__(
+        self,
+        num_classes: int,
+        decode_head: Classifier,
+        lr: float,
+        adamw_kwargs: dict[str, Any],
+        weight_decay: float = 0.0,
+    ) -> None:
+
+        super().__init__(num_classes, decode_head)
+
+        self._lr = lr
+        self._weight_decay = weight_decay
+        self._adamw_kwargs = adamw_kwargs
+
+    def configure_optimizers(self) -> Optimizer:
+        return AdamW(
+            self.parameters(),
+            lr=self._lr,
+            weight_decay=self._weight_decay,
+            **self._adamw_kwargs,
+        )
+
+
 class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
     def __init__(
         self,
         num_classes: int,
-        lr: float,
         decode_head: Classifier,
         lbfgs_kwargs: dict[str, Any],
         weight_decay: float = 0.0,
@@ -41,7 +59,7 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
         early_stopping: bool = True,
     ) -> None:
 
-        super().__init__(num_classes, lr, decode_head)
+        super().__init__(num_classes, decode_head)
 
         self.automatic_optimization = False
 
@@ -60,11 +78,10 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
             weight=torch.ones(num_classes),
         )
 
-    @override
     def configure_optimizers(self) -> Optimizer:
         return LBFGS(
             self.parameters(),
-            lr=self.lr,
+            lr=1.0,
             line_search_fn="strong_wolfe",
             **self._lbfgs_kwargs,
         )

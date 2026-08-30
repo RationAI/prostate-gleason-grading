@@ -4,13 +4,12 @@ defaults:
 
 _target_: ml.embedding_model.LBFGSEmbeddingsGleasonModel
 num_classes: 3
-lr: ???
+weight_decay: ???
 lbfgs_kwargs:
   max_iter: ???
   history_size: ???
   tolerance_grad: ???
   tolerance_change: ???
-weight_decay: ???
 cache_on_cpu: ???
 decode_head:
   in_features: 2560

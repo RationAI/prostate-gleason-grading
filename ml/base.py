@@ -4,7 +4,6 @@ from lightning import LightningModule
 from lightning.pytorch import loggers
 from matplotlib import pyplot as plt
 from torch import Tensor, nn, softmax
-from torch.optim import AdamW
 from torch.optim.optimizer import Optimizer
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
@@ -24,10 +23,9 @@ from ml.typing import LabeledSampleBatch, UnlabeledSampleBatch
 
 
 class GleasonModel(ABC, LightningModule):
-    def __init__(self, num_classes: int, lr: float) -> None:
+    def __init__(self, num_classes: int) -> None:
         super().__init__()
 
-        self.lr = lr
         self.num_classes = num_classes
         self.criterion = nn.CrossEntropyLoss()
 
@@ -83,6 +81,10 @@ class GleasonModel(ABC, LightningModule):
 
     @abstractmethod
     def forward(self, x: Tensor) -> Tensor:
+        pass
+
+    @abstractmethod
+    def configure_optimizers(self) -> Optimizer:
         pass
 
     def _logits_to_prob(self, logits: Tensor) -> Tensor:
@@ -177,6 +179,3 @@ class GleasonModel(ABC, LightningModule):
     def on_test_epoch_end(self) -> None:
         self._log_metrics(self.test_metrics)
         self._log_confusion_matrix(self.test_cm, "test")
-
-    def configure_optimizers(self) -> Optimizer:
-        return AdamW(self.parameters(), self.lr)
