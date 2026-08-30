@@ -22,3 +22,4 @@ dataset:
     embeddings:
       virchow2: "mlflow-artifacts:/65/1429184febea4cdcb26616c4038c6a71/artifacts/MMCI SL All"
       virchow2_tiling_splits: "mlflow-artifacts:/105/9c8f3d47667f44e0b60f5eff1f959301/artifacts/MMCI 2k 224"
+      virchow2_tiling_splits_mixed_gs: "mlflow-artifacts:/105/47c1ba539c1142a18772104d8c512f91/artifacts/MMCI 2k 224"

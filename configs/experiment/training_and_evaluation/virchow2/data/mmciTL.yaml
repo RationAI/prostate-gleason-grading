@@ -1,0 +1,28 @@
+# @package _global_
+
+defaults:
+  - /data/mmciTL_224@data
+  - /datamodule/embedding_datamodule@datamodule
+  - _self_
+
+datamodule:
+  batch_size: 1024
+  num_workers: 8
+  val:
+    uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_val}"]
+    paths: null
+    embeddings_col: embedding
+    fold: null
+    invert_fold_selection: False
+  test:
+    uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_test}"]
+    paths: null
+    embeddings_col: embedding
+    fold: null
+    invert_fold_selection: False
+  predict:
+    uris: ["${data.dataset.mlflow_uris.embeddings.virchow2_tiling_test}"]
+    paths: null
+    embeddings_col: embedding
+    fold: null
+    invert_fold_selection: False
