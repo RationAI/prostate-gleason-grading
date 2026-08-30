@@ -1,0 +1,6 @@
+# @package callbacks.conditional_prob_heatmaps
+
+_target_: ml.callbacks.heatmaps_callback.ConditionalProbabilityHeatmapCallback
+save_artifact_path: "heatmaps/conditional"
+eps: 0.001
+save_dir: null

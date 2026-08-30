@@ -1,0 +1,5 @@
+# @package callbacks.prob_heatmaps
+
+_target_: ml.callbacks.heatmaps_callback.ProbabilityHeatmapCallback
+save_artifact_path: "heatmaps/probability"
+save_dir: null

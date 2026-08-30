@@ -156,7 +156,7 @@ class HeatmapCallback(MultiloaderLifecycle):
         return self._mask_builder.resize_to_source(mask, kernel="nearest")
 
 
-class RawProbabilityHeatmapCallback(HeatmapCallback): ...
+class ProbabilityHeatmapCallback(HeatmapCallback): ...
 
 
 class ConditionalProbabilityHeatmapCallback(HeatmapCallback):
@@ -197,7 +197,7 @@ class ConditionalProbabilityHeatmapCallback(HeatmapCallback):
         return np.stack((carcinoma_prob, gp4_prob), axis=-1), coords[bit_mask]
 
 
-class ClassifyHeatmapCallback(HeatmapCallback):
+class ClassificationMaskCallback(HeatmapCallback):
     @override
     def _prepare_mask(self) -> pyvips.Image:
         prob_mask = self._mask_builder.finalize()["mask"]

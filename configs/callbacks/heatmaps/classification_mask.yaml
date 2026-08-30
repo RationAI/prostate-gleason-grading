@@ -1,0 +1,5 @@
+# @package callbacks.classification_masks
+
+_target_: ml.callbacks.heatmaps_callback.ClassificationMaskCallback
+save_artifact_path: "masks/classification"
+save_dir: null

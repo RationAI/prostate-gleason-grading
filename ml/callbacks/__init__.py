@@ -1,12 +1,12 @@
 from ml.callbacks.heatmaps_callback import (
-    ClassifyHeatmapCallback,
+    ClassificationMaskCallback,
     ConditionalProbabilityHeatmapCallback,
-    RawProbabilityHeatmapCallback,
+    ProbabilityHeatmapCallback,
 )
 
 
 __all__ = [
-    "ClassifyHeatmapCallback",
+    "ClassificationMaskCallback",
     "ConditionalProbabilityHeatmapCallback",
-    "RawProbabilityHeatmapCallback",
+    "ProbabilityHeatmapCallback",
 ]
