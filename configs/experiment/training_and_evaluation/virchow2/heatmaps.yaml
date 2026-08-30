@@ -1,0 +1,13 @@
+# @package _global_
+
+defaults:
+  - /experiment/training_and_evaluation/virchow2/data: ???
+  - /experiment/training_and_evaluation/virchow2/model: ???
+  - /callbacks/heatmaps/classification_mask
+  - /callbacks/heatmaps/conditional_probability_heatmap
+  - /callbacks/heatmaps/probability_heatmap
+  - _self_
+
+mode: predict
+
+checkpoint: ???

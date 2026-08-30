@@ -9,7 +9,7 @@ mode: ???
 
 model: {}
 model_name: ???
-checkpoint: null
+checkpoint: ???
 
 callbacks: {}
 trainer: {}
