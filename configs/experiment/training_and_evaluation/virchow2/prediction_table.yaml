@@ -1,0 +1,17 @@
+# @package _global_
+
+defaults:
+  - /experiment/training_and_evaluation/virchow2/data: ???
+  - /experiment/training_and_evaluation/virchow2/model: ???
+  - /callbacks/prediction_table
+  - _self_
+
+mode: predict
+
+checkpoint: ???
+
+model_name: ???
+
+metadata:
+  run_name: "PREDICTION TABLE: ${model_name} ${data.dataset.name}"
+  description: "PREDICTION TABLE: ${model_name} ${data.dataset.name}"

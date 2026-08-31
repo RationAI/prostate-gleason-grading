@@ -1,0 +1,3 @@
+# @package callbacks.prediction_table
+
+_target_: ml.callbacks.prediction_table_callback.PredictionTableCallback
