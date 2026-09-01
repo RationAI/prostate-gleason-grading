@@ -7,7 +7,7 @@ defaults:
 
 data_info: "ValFold=${validation_fold}"
 
-validation_fold: ???
+validation_fold: null
 
 datamodule:
   batch_size: 1024
