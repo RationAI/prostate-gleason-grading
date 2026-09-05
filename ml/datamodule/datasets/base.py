@@ -16,6 +16,14 @@ T_co = TypeVar("T_co", covariant=True)
 
 
 class SlideTiles:
+    """Lightweight, lazy view of the tiles belonging to one slide.
+
+    `HFDataset.select()` was found to cause substantial memory growth when
+    creating per-slide subsets. This class avoids that by storing only the
+    selected row indices and retrieving tiles from the original dataset on
+    demand.
+    """
+
     def __init__(self, tiles: HFDataset, indices: np.ndarray) -> None:
         self._tiles = tiles
         self._index_map = indices
