@@ -1,13 +1,14 @@
 from collections.abc import Iterable
-from typing import Literal, cast, overload
 
-import torch
 from hydra.utils import instantiate
 from lightning import LightningDataModule
 from omegaconf import DictConfig
-from rationai.mlkit.data.datasets import MetaTiledSlides
 from torch.utils.data import DataLoader
 
+from ml.datamodule.datasets.base import (
+    LabeledSlideDataset,
+    UnlabeledSlideDataset,
+)
 from ml.typing import (
     LabeledSample,
     LabeledSampleBatch,
@@ -17,14 +18,17 @@ from ml.typing import (
 
 
 class DataModule(LightningDataModule):
+    train: LabeledSlideDataset[LabeledSample]
+    val: LabeledSlideDataset[LabeledSample]
+    test: LabeledSlideDataset[LabeledSample]
+    predict: UnlabeledSlideDataset[UnlabeledSample]
+
     def __init__(
         self,
         batch_size: int,
         drop_last: bool,
         shuffle: bool,
         sampler: DictConfig | None = None,
-        fold: int | None = None,
-        invert_fold_selection: bool = False,
         num_workers: int = 0,
         **datasets: DictConfig,
     ) -> None:
@@ -32,67 +36,27 @@ class DataModule(LightningDataModule):
         super().__init__()
 
         self.datasets = datasets
-
-        self.fold = fold
-        self.invert_fold_selection = invert_fold_selection
-
         self.drop_last = drop_last
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.sampler = sampler
-
         self.num_workers = num_workers
-
-    @overload
-    def _instantiate_dataset(
-        self, mode: Literal["train", "val", "test"]
-    ) -> MetaTiledSlides[LabeledSample]: ...
-
-    @overload
-    def _instantiate_dataset(
-        self, mode: Literal["predict"]
-    ) -> MetaTiledSlides[UnlabeledSample]: ...
-
-    def _instantiate_dataset(
-        self, mode: str
-    ) -> MetaTiledSlides[LabeledSample] | MetaTiledSlides[UnlabeledSample]:
-
-        fold = self.fold if mode in {"train", "val"} else None
-        dataset = instantiate(
-            self.datasets[mode],
-            mode=mode,
-            fold=fold,
-            invert_fold_selection=self.invert_fold_selection,
-        )
-
-        return (
-            cast("MetaTiledSlides[UnlabeledSample]", dataset)
-            if mode == "predict"
-            else cast("MetaTiledSlides[LabeledSample]", dataset)
-        )
 
     def setup(self, stage: str) -> None:
         match stage:
             case "fit":
-                self.train = self._instantiate_dataset("train")
-                self.val = self._instantiate_dataset("val")
+                self.train = instantiate(self.datasets["train"])
+                self.val = instantiate(self.datasets["val"])
             case "validate":
-                self.val = self._instantiate_dataset("val")
+                self.val = instantiate(self.datasets["val"])
             case "test":
-                self.test = self._instantiate_dataset("test")
+                self.test = instantiate(self.datasets["test"])
             case "predict":
-                self.predict = self._instantiate_dataset("predict")
-
-    def get_train_labels(self) -> torch.Tensor:
-
-        if hasattr(self.train, "get_labels") and callable(self.train.get_labels):
-            return self.train.get_labels()
-
-        raise RuntimeError("Train dataset does not provide labels.")
+                self.predict = instantiate(self.datasets["predict"])
 
     def train_dataloader(self) -> Iterable[LabeledSampleBatch]:
         sampler = (
-            instantiate(self.sampler, labels=self.get_train_labels())
+            instantiate(self.sampler, labels=self.train.get_tile_labels())
             if self.sampler is not None
             else None
         )

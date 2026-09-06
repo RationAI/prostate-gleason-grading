@@ -5,10 +5,14 @@ defaults:
   - datasets@predict: embeddings/unlabeled
   - samplers@sampler: stratified_weighted_random
 
-_target_: ml.datamodule.data_module.DataModule
+_target_: ml.datamodule.datamodule.DataModule
 batch_size: ???
 drop_last: true
 shuffle: true
 num_workers: ???
-fold: null
-invert_fold_selection: false
+train:
+  apply_carcinoma_prediction_filter: True
+val:
+  apply_carcinoma_prediction_filter: False
+test:
+  apply_carcinoma_prediction_filter: False

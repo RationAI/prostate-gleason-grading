@@ -71,7 +71,7 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
 
     def _configure_train_criterion(self) -> None:
 
-        labels = cast("Any", self.trainer).datamodule.get_train_labels()
+        labels = cast("Any", self.trainer).datamodule.train.get_tile_labels()
 
         num_total_samples = labels.numel()
         num_class_samples = (
