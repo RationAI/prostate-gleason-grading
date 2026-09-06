@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, TypeVar
@@ -8,14 +8,34 @@ import pyarrow as pa
 import pyarrow.compute as pc
 import torch
 from datasets import Dataset as HFDataset
-from rationai.mlkit.data.datasets import SlidesTilesLoader
-from torch.utils.data import ConcatDataset, Dataset
+from rationai.mlkit.data.datasets import MetaTiledSlides
+from torch.utils.data import Dataset
 
 
 T_co = TypeVar("T_co", covariant=True)
 
 
-class FilterableDataset(ConcatDataset[T_co], ABC):
+class SlideTiles:
+    """Lightweight, lazy view of the tiles belonging to one slide.
+
+    `HFDataset.select()` was found to cause substantial memory growth when
+    creating per-slide subsets. This class avoids that by storing only the
+    selected row indices and retrieving tiles from the original dataset on
+    demand.
+    """
+
+    def __init__(self, tiles: HFDataset, indices: np.ndarray) -> None:
+        self._tiles = tiles
+        self._index_map = indices
+
+    def __len__(self) -> int:
+        return len(self._index_map)
+
+    def __getitem__(self, idx: int) -> dict[str, Any]:
+        return self._tiles[self._index_map[idx]]
+
+
+class FilterableDataset(MetaTiledSlides[T_co]):
     def __init__(
         self,
         qc_and_tissue_thresholds: dict[str, float],
@@ -27,16 +47,6 @@ class FilterableDataset(ConcatDataset[T_co], ABC):
         invert_fold_selection: bool = False,
         labels_map: dict[str, int] | None = None,
     ) -> None:
-
-        if uris is None and paths is None:
-            raise ValueError("At least one of 'uris' and 'paths' must be provided.")
-
-        loader = SlidesTilesLoader(paths=paths, uris=uris)
-        self.slides: HFDataset = loader.slides
-        self.tiles: HFDataset = loader.tiles.flatten_indices()
-        self.tile_index: dict[str | bytes, pa.ListScalar] = loader._build_tile_index(
-            self.tiles
-        )
 
         self.labeled = carcinoma_prediction_threshold is not None
         self.qc_and_tissue_thresholds = qc_and_tissue_thresholds
@@ -62,7 +72,13 @@ class FilterableDataset(ConcatDataset[T_co], ABC):
         self._qc_and_tissue_mask: np.ndarray | None = None
         self._carcinoma_prediction_mask: np.ndarray | None = None
 
-        super().__init__(self.generate_datasets())
+        self.slides: HFDataset
+        self.tiles: HFDataset
+
+        if (uris is None) == (paths is None):
+            raise ValueError("Exactly one of 'uris' and 'paths' must be provided.")
+
+        super().__init__(uris=uris, paths=paths)
 
     def _check_labels(self) -> None:
 
@@ -128,12 +144,14 @@ class FilterableDataset(ConcatDataset[T_co], ABC):
 
         return self.slides
 
-    def _filter_tiles_by_slide_and_thresholds(self, slide: dict[str, Any]) -> HFDataset:
+    def _filter_tiles_by_slide_and_thresholds(
+        self, slide: dict[str, Any]
+    ) -> SlideTiles:
 
-        indices = self.tile_index.get(slide["id"])
+        indices = self._slide_id_to_indices.get(slide["id"])
 
         if indices is None:
-            return self.tiles.select([])
+            return SlideTiles(self.tiles, np.empty(0, dtype=np.int64))
 
         np_indices = indices.values.to_numpy()
 
@@ -149,7 +167,7 @@ class FilterableDataset(ConcatDataset[T_co], ABC):
         assert mask is not None
 
         np_indices = np_indices[mask[np_indices]]
-        return self.tiles.select(np_indices)
+        return SlideTiles(self.tiles, np_indices)
 
     def generate_datasets(self) -> Iterable[Dataset[T_co]]:
 
@@ -181,7 +199,7 @@ class FilterableDataset(ConcatDataset[T_co], ABC):
     def _generate_slide_dataset(
         self,
         slide: dict[str, Any],
-        tiles: HFDataset,
+        tiles: SlideTiles,
         label: torch.Tensor | None,
     ) -> Dataset[T_co]:
         pass
