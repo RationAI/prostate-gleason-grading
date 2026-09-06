@@ -11,8 +11,6 @@ from datasets import Dataset as HFDataset
 from rationai.mlkit.data.datasets import MetaTiledSlides
 from torch.utils.data import Dataset
 
-from ml.typing import LabeledSample, UnlabeledSample
-
 
 type Slide = dict[str, Any]
 type Tile = dict[str, Any]
@@ -46,10 +44,10 @@ class TileDataset(Dataset[T_co], ABC):
         pass
 
 
-class UnlabeledTileDataset(TileDataset[UnlabeledSample], ABC): ...
+class UnlabeledTileDataset(TileDataset[T_co], ABC): ...
 
 
-class LabeledTileDataset(TileDataset[LabeledSample], ABC):
+class LabeledTileDataset(TileDataset[T_co], ABC):
     def __init__(
         self,
         slide: Slide,
@@ -165,23 +163,23 @@ class SlideDataset(MetaTiledSlides[T_co], ABC):
             yield tile_dataset
 
 
-class UnlabeledSlideDataset(SlideDataset[UnlabeledSample]):
+class UnlabeledSlideDataset(SlideDataset[T_co], ABC):
     @abstractmethod
     def _generate_tile_dataset(
         self,
         slide: Slide,
         tiles: Tiles,
-    ) -> UnlabeledTileDataset:
+    ) -> UnlabeledTileDataset[T_co]:
         pass
 
     def _filter_tiles_by_slide_and_thresholds(
         self, slide: Slide
-    ) -> UnlabeledTileDataset:
+    ) -> UnlabeledTileDataset[T_co]:
         indices = self._get_base_filtered_indices(slide)
         return self._generate_tile_dataset(slide, Tiles(self.tiles, indices))
 
 
-class LabeledSlideDataset(SlideDataset[LabeledSample]):
+class LabeledSlideDataset(SlideDataset[T_co], ABC):
     def __init__(
         self,
         labels_map: dict[str, int],
@@ -262,10 +260,12 @@ class LabeledSlideDataset(SlideDataset[LabeledSample]):
         tiles: Tiles,
         slide_label: torch.Tensor,
         tile_labels: torch.Tensor,
-    ) -> LabeledTileDataset:
+    ) -> LabeledTileDataset[T_co]:
         pass
 
-    def _filter_tiles_by_slide_and_thresholds(self, slide: Slide) -> LabeledTileDataset:
+    def _filter_tiles_by_slide_and_thresholds(
+        self, slide: Slide
+    ) -> LabeledTileDataset[T_co]:
 
         indices = self._get_base_filtered_indices(slide)
 

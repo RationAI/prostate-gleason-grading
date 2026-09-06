@@ -26,7 +26,9 @@ class EmbeddingsTileDatasetMixin:
         )
 
 
-class UnlabeledEmbeddingsTileDataset(UnlabeledTileDataset, EmbeddingsTileDatasetMixin):
+class UnlabeledEmbeddingsTileDataset(
+    UnlabeledTileDataset[UnlabeledSample], EmbeddingsTileDatasetMixin
+):
     def __init__(
         self,
         slide: Slide,
@@ -40,7 +42,9 @@ class UnlabeledEmbeddingsTileDataset(UnlabeledTileDataset, EmbeddingsTileDataset
         return self._get_embedding_and_metadata(idx)
 
 
-class LabeledEmbeddingsTileDataset(LabeledTileDataset, EmbeddingsTileDatasetMixin):
+class LabeledEmbeddingsTileDataset(
+    LabeledTileDataset[LabeledSample], EmbeddingsTileDatasetMixin
+):
     def __init__(
         self,
         slide: Slide,
@@ -57,7 +61,7 @@ class LabeledEmbeddingsTileDataset(LabeledTileDataset, EmbeddingsTileDatasetMixi
         return embedding, metadata, self.tile_labels[idx]
 
 
-class UnlabeledEmbeddingsSlideDataset(UnlabeledSlideDataset):
+class UnlabeledEmbeddingsSlideDataset(UnlabeledSlideDataset[UnlabeledSample]):
     def __init__(self, embeddings_col: str, **kwargs: Any) -> None:
         self.embeddings_col = embeddings_col
         super().__init__(**kwargs)
@@ -68,7 +72,7 @@ class UnlabeledEmbeddingsSlideDataset(UnlabeledSlideDataset):
         return UnlabeledEmbeddingsTileDataset(slide, tiles, self.embeddings_col)
 
 
-class LabeledEmbeddingsSlideDataset(LabeledSlideDataset):
+class LabeledEmbeddingsSlideDataset(LabeledSlideDataset[LabeledSample]):
     def __init__(self, embeddings_col: str, **kwargs: Any) -> None:
         self.embeddings_col = embeddings_col
         super().__init__(**kwargs)

@@ -10,16 +10,18 @@ from ml.datamodule.datasets.base import (
     UnlabeledSlideDataset,
 )
 from ml.typing import (
+    LabeledSample,
     LabeledSampleBatch,
+    UnlabeledSample,
     UnlabeledSampleBatch,
 )
 
 
 class DataModule(LightningDataModule):
-    train: LabeledSlideDataset
-    val: LabeledSlideDataset
-    test: LabeledSlideDataset
-    predict: UnlabeledSlideDataset
+    train: LabeledSlideDataset[LabeledSample]
+    val: LabeledSlideDataset[LabeledSample]
+    test: LabeledSlideDataset[LabeledSample]
+    predict: UnlabeledSlideDataset[UnlabeledSample]
 
     def __init__(
         self,
