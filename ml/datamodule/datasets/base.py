@@ -88,8 +88,8 @@ class SlideDataset(MetaTiledSlides[T_co], ABC):
         self.qc_and_tissue_thresholds = qc_and_tissue_thresholds
         self._qc_and_tissue_mask: np.ndarray | None = None
 
-        if (uris is None) == (paths is None):
-            raise ValueError("Exactly one of 'uris' and 'paths' must be provided.")
+        if uris is None and paths is None:
+            raise ValueError("At least one of 'uris' and 'paths' must be provided.")
 
         super().__init__(uris=uris, paths=paths)
 
