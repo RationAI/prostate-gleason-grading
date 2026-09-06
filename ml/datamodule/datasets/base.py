@@ -22,6 +22,10 @@ class SlideTiles:
     creating per-slide subsets. This class avoids that by storing only the
     selected row indices and retrieving tiles from the original dataset on
     demand.
+
+    An alternative approach is to use `HFDataset.flatten_indices()` before
+    `HFDataset.select()`. However, this adds additional overhead and slows
+    down dataset loading.
     """
 
     def __init__(self, tiles: HFDataset, indices: np.ndarray) -> None:
