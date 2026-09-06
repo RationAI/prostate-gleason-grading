@@ -3,9 +3,10 @@ from pathlib import Path
 from typing import Any, TypeVar, cast
 
 import torch
+from datasets import Dataset as HFDataset
 from torch.utils.data import Dataset
 
-from ml.datamodule.datasets.base import FilterableDataset, SlideTiles
+from ml.datamodule.datasets.base import FilterableDataset
 from ml.typing import LabeledSample, Metadata, UnlabeledSample
 
 
@@ -16,7 +17,7 @@ class EmbeddingsTileDataset(Dataset[LabeledSample | UnlabeledSample]):
     def __init__(
         self,
         slide: str,
-        tiles: SlideTiles,
+        tiles: HFDataset,
         embeddings_col: str,
         label: torch.Tensor | None = None,
     ) -> None:
@@ -77,7 +78,7 @@ class EmbeddingsSlideDataset(FilterableDataset[T_co]):
     def _generate_slide_dataset(
         self,
         slide: dict[str, Any],
-        tiles: SlideTiles,
+        tiles: HFDataset,
         label: torch.Tensor | None,
     ) -> Dataset[T_co]:
         return cast(

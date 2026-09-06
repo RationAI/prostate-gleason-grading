@@ -2800,7 +2800,7 @@ dependencies = [
 [[package]]
 name = "rationai-mlkit"
 version = "0.4.1"
-source = { git = "https://github.com/RationAI/mlkit.git#cdf212b2f703782dba1732ddf732fea73286d8ee" }
+source = { git = "https://github.com/RationAI/mlkit.git#db38501bb363cd3d76c6a3d31bec702f16002dd1" }
 dependencies = [
     { name = "datasets" },
     { name = "gitpython" },
