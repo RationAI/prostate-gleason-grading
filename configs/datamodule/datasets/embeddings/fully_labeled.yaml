@@ -1,4 +1,4 @@
-_target_: ml.datamodule.datasets.LabeledEmbeddingsSlideDataset
+_target_: ml.datamodule.datasets.FullyLabeledEmbeddingsSlideDataset
 uris: ???
 paths: ???
 embeddings_col: ???
