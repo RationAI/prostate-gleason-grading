@@ -47,7 +47,7 @@ class PredictionTableCallback(MultiloaderLifecycle):
 
         datamodule: DataModule = cast("Any", trainer).datamodule
         dataset = datamodule.predict.datasets[dataloader_idx]
-        self.slide = cast("TileDataset[Any]", dataset).slide["stem"]
+        self.slide = cast("TileDataset[Any, Any]", dataset).slide["stem"]
 
         self.table = {
             "slide": [],

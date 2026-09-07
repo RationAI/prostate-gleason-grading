@@ -67,7 +67,7 @@ class HeatmapCallback(MultiloaderLifecycle):
 
         datamodule: DataModule = cast("Any", trainer).datamodule
         dataset = getattr(datamodule, mode).datasets[dataloader_idx]
-        self._slide = cast("TileDataset[Any]", dataset).slide
+        self._slide = cast("TileDataset[Any, Any]", dataset).slide
 
         module = cast("GleasonModel", pl_module)
 
