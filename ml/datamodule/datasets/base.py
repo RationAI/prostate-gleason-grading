@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, TypeVar, override
+from typing import Any, override
 
 import numpy as np
 import pyarrow as pa
@@ -13,8 +13,10 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 from ml.typing import (
+    BagMetadata,
     FullyLabeledBag,
     LabeledSample,
+    Metadata,
     UnlabeledBag,
     UnlabeledSample,
     WeaklyLabeledBag,
@@ -23,9 +25,6 @@ from ml.typing import (
 
 type Slide = dict[str, Any]
 type Tile = dict[str, Any]
-
-S_co = TypeVar("S_co", covariant=True)
-B_co = TypeVar("B_co", covariant=True)
 
 
 class Tiles:
@@ -44,7 +43,7 @@ class Tiles:
         return self._tiles.select(self._index_map)
 
 
-class TileDataset[S_co, B_co](Dataset[S_co], ABC):
+class TileDataset[S, B](Dataset[S], ABC):
     def __init__(self, slide: Slide, tiles: Tiles) -> None:
         super().__init__()
         self.slide = slide
@@ -54,15 +53,23 @@ class TileDataset[S_co, B_co](Dataset[S_co], ABC):
         return len(self.tiles)
 
     @abstractmethod
-    def __getitem__(self, idx: int) -> S_co:
+    def _get_sample(self, idx: int) -> tuple[Tensor, Metadata]:
         pass
 
     @abstractmethod
-    def as_bag(self) -> B_co:
+    def __getitem__(self, idx: int) -> S:
+        pass
+
+    @abstractmethod
+    def _get_bag(self) -> tuple[Tensor, BagMetadata]:
+        pass
+
+    @abstractmethod
+    def as_bag(self) -> B:
         pass
 
 
-class LabeledTileDataset[S_co, B_co](TileDataset[S_co, B_co], ABC):
+class LabeledTileDataset[B](TileDataset[LabeledSample, B], ABC):
     def __init__(self, slide: Slide, tiles: Tiles, slide_label: Tensor) -> None:
         if slide_label.ndim != 0:
             raise ValueError("Scalar tensor is expected as a slide label.")
@@ -70,15 +77,25 @@ class LabeledTileDataset[S_co, B_co](TileDataset[S_co, B_co], ABC):
         self.slide_label = slide_label
 
 
-class UnlabeledTileDataset(TileDataset[UnlabeledSample, UnlabeledBag], ABC): ...
+class UnlabeledTileDataset(TileDataset[UnlabeledSample, UnlabeledBag], ABC):
+    def __getitem__(self, idx: int) -> UnlabeledSample:
+        return self._get_sample(idx)
+
+    def as_bag(self) -> UnlabeledBag:
+        return self._get_bag()
 
 
-class WeaklyLabeledTileDataset(
-    LabeledTileDataset[LabeledSample, WeaklyLabeledBag], ABC
-): ...
+class WeaklyLabeledTileDataset(LabeledTileDataset[WeaklyLabeledBag], ABC):
+    def __getitem__(self, idx: int) -> LabeledSample:
+        feature, metadata = self._get_sample(idx)
+        return feature, metadata, self.slide_label
+
+    def as_bag(self) -> WeaklyLabeledBag:
+        features, metadata = self._get_bag()
+        return features, metadata, self.slide_label
 
 
-class FullyLabeledTileDataset(LabeledTileDataset[LabeledSample, FullyLabeledBag], ABC):
+class FullyLabeledTileDataset(LabeledTileDataset[FullyLabeledBag], ABC):
     def __init__(
         self,
         slide: Slide,
@@ -93,8 +110,16 @@ class FullyLabeledTileDataset(LabeledTileDataset[LabeledSample, FullyLabeledBag]
         super().__init__(slide, tiles, slide_label)
         self.tile_labels = tile_labels
 
+    def __getitem__(self, idx: int) -> LabeledSample:
+        feature, metadata = self._get_sample(idx)
+        return feature, metadata, self.tile_labels[idx]
 
-class SlideDataset[S_co, B_co](MetaTiledSlides[S_co], ABC):
+    def as_bag(self) -> FullyLabeledBag:
+        features, metadata = self._get_bag()
+        return features, metadata, self.slide_label, self.tile_labels
+
+
+class SlideDataset[S, B](MetaTiledSlides[S], ABC):
     slides: HFDataset
     tiles: HFDataset
 
@@ -168,12 +193,10 @@ class SlideDataset[S_co, B_co](MetaTiledSlides[S_co], ABC):
         )
 
     @abstractmethod
-    def _filter_tiles_by_slide_and_thresholds(
-        self, slide: Slide
-    ) -> TileDataset[S_co, B_co]:
+    def _filter_tiles_by_slide_and_thresholds(self, slide: Slide) -> TileDataset[S, B]:
         pass
 
-    def generate_datasets(self) -> Iterable[TileDataset[S_co, B_co]]:
+    def generate_datasets(self) -> Iterable[TileDataset[S, B]]:
 
         self._validate_dataset()
 
@@ -190,7 +213,7 @@ class SlideDataset[S_co, B_co](MetaTiledSlides[S_co], ABC):
             yield tile_dataset
 
 
-class LabeledSlideDataset[S_co, B_co](SlideDataset[S_co, B_co], ABC):
+class LabeledSlideDataset[S, B](SlideDataset[S, B], ABC):
     def __init__(
         self,
         labels_map: dict[str, int],
