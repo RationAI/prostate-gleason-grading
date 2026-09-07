@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, override
+from typing import Any, cast, override
 
 import numpy as np
 import pyarrow as pa
@@ -418,3 +418,27 @@ class FullyLabeledSlideDataset(
             labels.append(dataset.tile_labels)
 
         return torch.cat(labels) if labels else torch.tensor([], dtype=torch.long)
+
+
+class BagOfTilesDataset[B](Dataset[B]):
+    def __init__(self, slide_dataset: SlideDataset[Any, B]) -> None:
+        self.slide_dataset = slide_dataset
+        self.bags = cast(
+            "list[TileDataset[Any, B]]",
+            slide_dataset.datasets,
+        )
+
+    def __len__(self) -> int:
+        return len(self.bags)
+
+    def __getitem__(self, idx: int) -> B:
+        return self.bags[idx].as_bag()
+
+
+class UnlabeledBagOfTilesDataset(BagOfTilesDataset[UnlabeledBag]): ...
+
+
+class WeaklyLabeledBagOfTilesDataset(BagOfTilesDataset[WeaklyLabeledBag]): ...
+
+
+class FullyLabeledBagOfTilesDataset(BagOfTilesDataset[FullyLabeledBag]): ...
