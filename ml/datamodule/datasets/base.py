@@ -9,13 +9,23 @@ import pyarrow.compute as pc
 import torch
 from datasets import Dataset as HFDataset
 from rationai.mlkit.data.datasets import MetaTiledSlides
+from torch import Tensor
 from torch.utils.data import Dataset
+
+from ml.typing import (
+    FullyLabeledBag,
+    LabeledSample,
+    UnlabeledBag,
+    UnlabeledSample,
+    WeaklyLabeledBag,
+)
 
 
 type Slide = dict[str, Any]
 type Tile = dict[str, Any]
 
-T_co = TypeVar("T_co", covariant=True)
+S_co = TypeVar("S_co", covariant=True)
+B_co = TypeVar("B_co", covariant=True)
 
 
 class Tiles:
@@ -29,8 +39,12 @@ class Tiles:
     def __getitem__(self, idx: int) -> Tile:
         return self._tiles[self._index_map[idx]]
 
+    @property
+    def tiles(self) -> HFDataset:
+        return self._tiles.select(self._index_map)
 
-class TileDataset(Dataset[T_co], ABC):
+
+class TileDataset[S_co, B_co](Dataset[S_co], ABC):
     def __init__(self, slide: Slide, tiles: Tiles) -> None:
         super().__init__()
         self.slide = slide
@@ -40,36 +54,47 @@ class TileDataset(Dataset[T_co], ABC):
         return len(self.tiles)
 
     @abstractmethod
-    def __getitem__(self, idx: int) -> T_co:
+    def __getitem__(self, idx: int) -> S_co:
+        pass
+
+    @abstractmethod
+    def as_bag(self) -> B_co:
         pass
 
 
-class UnlabeledTileDataset(TileDataset[T_co], ABC): ...
+class LabeledTileDataset[S_co, B_co](TileDataset[S_co, B_co], ABC):
+    def __init__(self, slide: Slide, tiles: Tiles, slide_label: Tensor) -> None:
+        if slide_label.ndim != 0:
+            raise ValueError("Scalar tensor is expected as a slide label.")
+        super().__init__(slide, tiles)
+        self.slide_label = slide_label
 
 
-class LabeledTileDataset(TileDataset[T_co], ABC):
+class UnlabeledTileDataset(TileDataset[UnlabeledSample, UnlabeledBag], ABC): ...
+
+
+class WeaklyLabeledTileDataset(
+    LabeledTileDataset[LabeledSample, WeaklyLabeledBag], ABC
+): ...
+
+
+class FullyLabeledTileDataset(LabeledTileDataset[LabeledSample, FullyLabeledBag], ABC):
     def __init__(
         self,
         slide: Slide,
         tiles: Tiles,
-        slide_label: torch.Tensor,
-        tile_labels: torch.Tensor,
+        slide_label: Tensor,
+        tile_labels: Tensor,
     ) -> None:
-
-        if slide_label.ndim != 0:
-            raise ValueError("Scalar tensor is expected as a slide label.")
-
         if len(tiles) != tile_labels.numel():
             raise ValueError(
                 "The number of tile labels must match the number of tiles."
             )
-
-        super().__init__(slide, tiles)
-        self.slide_label = slide_label
+        super().__init__(slide, tiles, slide_label)
         self.tile_labels = tile_labels
 
 
-class SlideDataset(MetaTiledSlides[T_co], ABC):
+class SlideDataset[S_co, B_co](MetaTiledSlides[S_co], ABC):
     slides: HFDataset
     tiles: HFDataset
 
@@ -143,10 +168,12 @@ class SlideDataset(MetaTiledSlides[T_co], ABC):
         )
 
     @abstractmethod
-    def _filter_tiles_by_slide_and_thresholds(self, slide: Slide) -> TileDataset[T_co]:
+    def _filter_tiles_by_slide_and_thresholds(
+        self, slide: Slide
+    ) -> TileDataset[S_co, B_co]:
         pass
 
-    def generate_datasets(self) -> Iterable[TileDataset[T_co]]:
+    def generate_datasets(self) -> Iterable[TileDataset[S_co, B_co]]:
 
         self._validate_dataset()
 
@@ -163,23 +190,104 @@ class SlideDataset(MetaTiledSlides[T_co], ABC):
             yield tile_dataset
 
 
-class UnlabeledSlideDataset(SlideDataset[T_co], ABC):
+class LabeledSlideDataset[S_co, B_co](SlideDataset[S_co, B_co], ABC):
+    def __init__(
+        self,
+        labels_map: dict[str, int],
+        qc_and_tissue_thresholds: dict[str, float],
+        fold: int | None = None,
+        invert_fold_selection: bool = False,
+        uris: Iterable[str] | None = None,
+        paths: Iterable[Path | str] | None = None,
+    ) -> None:
+        if labels_map.get("None") != 0:
+            raise ValueError("Label of negative slides is expected to be 0.")
+
+        self.labels_map = labels_map
+
+        super().__init__(
+            qc_and_tissue_thresholds=qc_and_tissue_thresholds,
+            fold=fold,
+            invert_fold_selection=invert_fold_selection,
+            uris=uris,
+            paths=paths,
+        )
+
+    @override
+    def _validate_dataset(self) -> None:
+        super()._validate_dataset()
+
+        if "gleason_score" not in self.slides.column_names:
+            raise ValueError("Slides are missing 'gleason_score' column.")
+
+        expected_labels = set(self.labels_map.keys())
+        found_labels = set(self.slides.unique("gleason_score"))
+        unknown_labels = found_labels - expected_labels
+
+        if len(unknown_labels) > 0:
+            raise ValueError(
+                f"Dataset contains unexpected gleason score labels. Expected "
+                f"labels: {expected_labels}. Unknown labels: {unknown_labels}"
+            )
+
+    def _get_slide_label(self, slide: Slide) -> Tensor:
+        return torch.tensor(
+            self.labels_map[slide["gleason_score"]],
+            dtype=torch.long,
+        )
+
+    def get_slide_labels(self) -> dict[str, Tensor]:
+
+        labels: dict[str, Tensor] = {}
+
+        for dataset in self.datasets:
+            assert isinstance(dataset, LabeledTileDataset)
+            labels[dataset.slide["stem"]] = dataset.slide_label
+
+        return labels
+
+
+class UnlabeledSlideDataset(SlideDataset[UnlabeledSample, UnlabeledBag], ABC):
     @abstractmethod
     def _generate_tile_dataset(
         self,
         slide: Slide,
         tiles: Tiles,
-    ) -> UnlabeledTileDataset[T_co]:
+    ) -> UnlabeledTileDataset:
         pass
 
     def _filter_tiles_by_slide_and_thresholds(
         self, slide: Slide
-    ) -> UnlabeledTileDataset[T_co]:
+    ) -> UnlabeledTileDataset:
         indices = self._get_base_filtered_indices(slide)
         return self._generate_tile_dataset(slide, Tiles(self.tiles, indices))
 
 
-class LabeledSlideDataset(SlideDataset[T_co], ABC):
+class WeaklyLabeledSlideDataset(
+    LabeledSlideDataset[LabeledSample, WeaklyLabeledBag], ABC
+):
+    @abstractmethod
+    def _generate_tile_dataset(
+        self,
+        slide: Slide,
+        tiles: Tiles,
+        slide_label: Tensor,
+    ) -> WeaklyLabeledTileDataset:
+        pass
+
+    def _filter_tiles_by_slide_and_thresholds(
+        self, slide: Slide
+    ) -> WeaklyLabeledTileDataset:
+        indices = self._get_base_filtered_indices(slide)
+        slide_label = self._get_slide_label(slide)
+        return self._generate_tile_dataset(
+            slide, Tiles(self.tiles, indices), slide_label
+        )
+
+
+class FullyLabeledSlideDataset(
+    LabeledSlideDataset[LabeledSample, FullyLabeledBag], ABC
+):
     def __init__(
         self,
         labels_map: dict[str, int],
@@ -192,11 +300,6 @@ class LabeledSlideDataset(SlideDataset[T_co], ABC):
         paths: Iterable[Path | str] | None = None,
     ) -> None:
 
-        if labels_map.get("None") != 0:
-            raise ValueError("Label of negative slides is expected to be 0.")
-
-        self.labels_map = labels_map
-
         if apply_carcinoma_prediction_filter and carcinoma_prediction_threshold is None:
             raise ValueError(
                 "Unable to apply carcinoma prediction filter. The "
@@ -208,6 +311,7 @@ class LabeledSlideDataset(SlideDataset[T_co], ABC):
         self._carcinoma_prediction_mask: np.ndarray | None = None
 
         super().__init__(
+            labels_map=labels_map,
             qc_and_tissue_thresholds=qc_and_tissue_thresholds,
             fold=fold,
             invert_fold_selection=invert_fold_selection,
@@ -220,27 +324,14 @@ class LabeledSlideDataset(SlideDataset[T_co], ABC):
 
         super()._validate_dataset()
 
-        for col in ("gleason_score", "carcinoma"):
-            if col not in self.slides.column_names:
-                raise ValueError(f"Slides are missing '{col}' column.")
+        if "carcinoma" not in self.slides.column_names:
+            raise ValueError("Slides are missing 'carcinoma' column.")
 
         if (
             self.carcinoma_prediction_threshold is not None
             and "prediction" not in self.tiles.column_names
         ):
             raise ValueError("Tiles are missing 'prediction' column.")
-
-        assert self.labels_map is not None
-
-        expected_labels = set(self.labels_map.keys())
-        found_labels = set(self.slides.unique("gleason_score"))
-        unknown_labels = found_labels - expected_labels
-
-        if len(unknown_labels) > 0:
-            raise ValueError(
-                f"Dataset contains unexpected gleason score labels. Expected "
-                f"labels: {expected_labels}. Unknown labels: {unknown_labels}"
-            )
 
     @override
     def _build_filter_mask(self) -> None:
@@ -258,21 +349,17 @@ class LabeledSlideDataset(SlideDataset[T_co], ABC):
         self,
         slide: Slide,
         tiles: Tiles,
-        slide_label: torch.Tensor,
-        tile_labels: torch.Tensor,
-    ) -> LabeledTileDataset[T_co]:
+        slide_label: Tensor,
+        tile_labels: Tensor,
+    ) -> FullyLabeledTileDataset:
         pass
 
     def _filter_tiles_by_slide_and_thresholds(
         self, slide: Slide
-    ) -> LabeledTileDataset[T_co]:
+    ) -> FullyLabeledTileDataset:
 
         indices = self._get_base_filtered_indices(slide)
-
-        slide_label = torch.tensor(
-            self.labels_map[slide["gleason_score"]],
-            dtype=torch.long,
-        )
+        slide_label = self._get_slide_label(slide)
 
         if slide["carcinoma"] and self._carcinoma_prediction_mask is not None:
             binary_labels = self._carcinoma_prediction_mask[indices]
@@ -300,21 +387,11 @@ class LabeledSlideDataset(SlideDataset[T_co], ABC):
             tile_labels,
         )
 
-    def get_slide_labels(self) -> dict[str, torch.Tensor]:
-
-        labels: dict[str, torch.Tensor] = {}
-
-        for dataset in self.datasets:
-            assert isinstance(dataset, LabeledTileDataset)
-            labels[dataset.slide["stem"]] = dataset.slide_label
-
-        return labels
-
-    def get_tile_labels(self) -> torch.Tensor:
-        labels: list[torch.Tensor] = []
+    def get_tile_labels(self) -> Tensor:
+        labels: list[Tensor] = []
 
         for dataset in self.datasets:
-            assert isinstance(dataset, LabeledTileDataset)
+            assert isinstance(dataset, FullyLabeledTileDataset)
             labels.append(dataset.tile_labels)
 
         return torch.cat(labels) if labels else torch.tensor([], dtype=torch.long)
