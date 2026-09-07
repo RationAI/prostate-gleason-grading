@@ -6,22 +6,20 @@ from omegaconf import DictConfig
 from torch.utils.data import DataLoader
 
 from ml.datamodule.datasets.base import (
-    LabeledSlideDataset,
+    FullyLabeledSlideDataset,
     UnlabeledSlideDataset,
 )
 from ml.typing import (
-    LabeledSample,
     LabeledSampleBatch,
-    UnlabeledSample,
     UnlabeledSampleBatch,
 )
 
 
 class DataModule(LightningDataModule):
-    train: LabeledSlideDataset[LabeledSample]
-    val: LabeledSlideDataset[LabeledSample]
-    test: LabeledSlideDataset[LabeledSample]
-    predict: UnlabeledSlideDataset[UnlabeledSample]
+    train: FullyLabeledSlideDataset
+    val: FullyLabeledSlideDataset
+    test: FullyLabeledSlideDataset
+    predict: UnlabeledSlideDataset
 
     def __init__(
         self,
