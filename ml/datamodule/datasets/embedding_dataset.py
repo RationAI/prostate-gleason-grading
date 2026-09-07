@@ -1,93 +1,116 @@
 from typing import Any
 
 import torch
+from torch import Tensor
 
 from ml.datamodule.datasets.base import (
-    LabeledSlideDataset,
-    LabeledTileDataset,
+    FullyLabeledSlideDataset,
+    FullyLabeledTileDataset,
     Slide,
     Tiles,
     UnlabeledSlideDataset,
     UnlabeledTileDataset,
+    WeaklyLabeledSlideDataset,
+    WeaklyLabeledTileDataset,
 )
-from ml.typing import LabeledSample, Metadata, UnlabeledSample
+from ml.typing import BagMetadata, Metadata
 
 
-class EmbeddingsTileDatasetMixin:
+class EmbeddingsTileDataset:
     slide: Slide
     tiles: Tiles
-    embeddings_col: str
 
-    def _get_embedding_and_metadata(self, idx: int) -> tuple[torch.Tensor, Metadata]:
+    def __init__(self, embeddings_col: str, **kwargs: Any) -> None:
+        self.embeddings_col = embeddings_col
+        super().__init__(**kwargs)
+
+    def _get_sample(self, idx: int) -> tuple[Tensor, Metadata]:
         tile = self.tiles[idx]
         return (
             torch.as_tensor(tile[self.embeddings_col]),
             Metadata(slide=self.slide["stem"], x=tile["x"], y=tile["y"]),
         )
 
-
-class UnlabeledEmbeddingsTileDataset(
-    UnlabeledTileDataset[UnlabeledSample], EmbeddingsTileDatasetMixin
-):
-    def __init__(
-        self,
-        slide: Slide,
-        tiles: Tiles,
-        embeddings_col: str,
-    ) -> None:
-        super().__init__(slide, tiles)
-        self.embeddings_col = embeddings_col
-
-    def __getitem__(self, idx: int) -> UnlabeledSample:
-        return self._get_embedding_and_metadata(idx)
+    def _get_bag(self) -> tuple[Tensor, BagMetadata]:
+        tiles = self.tiles.tiles
+        return (
+            torch.as_tensor(tiles[self.embeddings_col]),
+            BagMetadata(
+                slide=self.slide["stem"],
+                x=torch.as_tensor(tiles["x"]),
+                y=torch.as_tensor(tiles["y"]),
+            ),
+        )
 
 
-class LabeledEmbeddingsTileDataset(
-    LabeledTileDataset[LabeledSample], EmbeddingsTileDatasetMixin
-):
-    def __init__(
-        self,
-        slide: Slide,
-        tiles: Tiles,
-        slide_label: torch.Tensor,
-        tile_labels: torch.Tensor,
-        embeddings_col: str,
-    ) -> None:
-        super().__init__(slide, tiles, slide_label, tile_labels)
-        self.embeddings_col = embeddings_col
-
-    def __getitem__(self, idx: int) -> LabeledSample:
-        embedding, metadata = self._get_embedding_and_metadata(idx)
-        return embedding, metadata, self.tile_labels[idx]
-
-
-class UnlabeledEmbeddingsSlideDataset(UnlabeledSlideDataset[UnlabeledSample]):
+class EmbeddingsSlideDataset:
     def __init__(self, embeddings_col: str, **kwargs: Any) -> None:
         self.embeddings_col = embeddings_col
         super().__init__(**kwargs)
 
+
+class UnlabeledEmbeddingsTileDataset(EmbeddingsTileDataset, UnlabeledTileDataset): ...
+
+
+class WeaklyLabeledEmbeddingsTileDataset(
+    EmbeddingsTileDataset,
+    WeaklyLabeledTileDataset,
+): ...
+
+
+class FullyLabeledEmbeddingsTileDataset(
+    EmbeddingsTileDataset,
+    FullyLabeledTileDataset,
+): ...
+
+
+class UnlabeledEmbeddingsSlideDataset(
+    EmbeddingsSlideDataset,
+    UnlabeledSlideDataset,
+):
     def _generate_tile_dataset(
         self, slide: Slide, tiles: Tiles
     ) -> UnlabeledEmbeddingsTileDataset:
-        return UnlabeledEmbeddingsTileDataset(slide, tiles, self.embeddings_col)
+        return UnlabeledEmbeddingsTileDataset(
+            self.embeddings_col,
+            slide=slide,
+            tiles=tiles,
+        )
 
 
-class LabeledEmbeddingsSlideDataset(LabeledSlideDataset[LabeledSample]):
-    def __init__(self, embeddings_col: str, **kwargs: Any) -> None:
-        self.embeddings_col = embeddings_col
-        super().__init__(**kwargs)
-
+class WeaklyLabeledEmbeddingsSlideDataset(
+    EmbeddingsSlideDataset,
+    WeaklyLabeledSlideDataset,
+):
     def _generate_tile_dataset(
         self,
         slide: Slide,
         tiles: Tiles,
-        slide_label: torch.Tensor,
-        tile_labels: torch.Tensor,
-    ) -> LabeledEmbeddingsTileDataset:
-        return LabeledEmbeddingsTileDataset(
-            slide,
-            tiles,
-            slide_label,
-            tile_labels,
+        slide_label: Tensor,
+    ) -> WeaklyLabeledEmbeddingsTileDataset:
+        return WeaklyLabeledEmbeddingsTileDataset(
             self.embeddings_col,
+            slide=slide,
+            tiles=tiles,
+            slide_label=slide_label,
+        )
+
+
+class FullyLabeledEmbeddingsSlideDataset(
+    EmbeddingsSlideDataset,
+    FullyLabeledSlideDataset,
+):
+    def _generate_tile_dataset(
+        self,
+        slide: Slide,
+        tiles: Tiles,
+        slide_label: Tensor,
+        tile_labels: Tensor,
+    ) -> FullyLabeledEmbeddingsTileDataset:
+        return FullyLabeledEmbeddingsTileDataset(
+            self.embeddings_col,
+            slide=slide,
+            tiles=tiles,
+            slide_label=slide_label,
+            tile_labels=tile_labels,
         )

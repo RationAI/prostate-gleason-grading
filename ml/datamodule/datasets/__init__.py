@@ -1,10 +1,12 @@
 from ml.datamodule.datasets.embedding_dataset import (
-    LabeledEmbeddingsSlideDataset,
+    FullyLabeledEmbeddingsSlideDataset,
     UnlabeledEmbeddingsSlideDataset,
+    WeaklyLabeledEmbeddingsSlideDataset,
 )
 
 
 __all__ = [
-    "LabeledEmbeddingsSlideDataset",
+    "FullyLabeledEmbeddingsSlideDataset",
     "UnlabeledEmbeddingsSlideDataset",
+    "WeaklyLabeledEmbeddingsSlideDataset",
 ]
