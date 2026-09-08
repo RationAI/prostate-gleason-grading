@@ -418,10 +418,7 @@ class FullyLabeledSlideDataset(LabeledSlideDataset[LabeledSample, FullyLabeledBa
 class BagOfTilesDataset[B](Dataset[B]):
     def __init__(self, slide_dataset: SlideDataset[Any, B]) -> None:
         self.slide_dataset = slide_dataset
-        self.bags = cast(
-            "list[TileDataset[Any, B]]",
-            slide_dataset.datasets,
-        )
+        self.bags = cast("list[TileDataset[Any, B]]", slide_dataset.datasets)
 
     def __len__(self) -> int:
         return len(self.bags)
