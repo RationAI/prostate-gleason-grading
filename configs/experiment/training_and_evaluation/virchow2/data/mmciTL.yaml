@@ -2,7 +2,7 @@
 
 defaults:
   - /data/mmciTL_224@data
-  - /datamodule/embedding_datamodule@datamodule
+  - /datamodule/embedding_samples_datamodule@datamodule
   - _self_
 
 data_info: ""

@@ -1,0 +1,19 @@
+defaults:
+  - datasets@train.slide_dataset: embeddings/fully_labeled
+  - datasets@val.slide_dataset: embeddings/fully_labeled
+  - datasets@test.slide_dataset: embeddings/fully_labeled
+  - datasets@predict.slide_dataset: embeddings/unlabeled
+  - samplers@sampler: stratified_weighted_random
+
+_target_: ml.datamodule.FullyLabeledBagsDataModule
+batch_size: ???
+shuffle: true
+num_workers: ???
+train:
+  _target_: ml.datamodule.datasets.FullyLabeledBagOfTilesDataset
+val:
+  _target_: ml.datamodule.datasets.FullyLabeledBagOfTilesDataset
+test:
+  _target_: ml.datamodule.datasets.FullyLabeledBagOfTilesDataset
+predict:
+  _target_: ml.datamodule.datasets.FullyLabeledBagOfTilesDataset

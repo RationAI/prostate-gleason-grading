@@ -1,0 +1,19 @@
+defaults:
+  - datasets@train.slide_dataset: embeddings/weakly_labeled
+  - datasets@val.slide_dataset: embeddings/weakly_labeled
+  - datasets@test.slide_dataset: embeddings/weakly_labeled
+  - datasets@predict.slide_dataset: embeddings/unlabeled
+  - samplers@sampler: stratified_weighted_random
+
+_target_: ml.datamodule.WeaklyLabeledBagsDataModule
+batch_size: ???
+shuffle: true
+num_workers: ???
+train:
+  _target_: ml.datamodule.datasets.WeaklyLabeledBagOfTilesDataset
+val:
+  _target_: ml.datamodule.datasets.WeaklyLabeledBagOfTilesDataset
+test:
+  _target_: ml.datamodule.datasets.WeaklyLabeledBagOfTilesDataset
+predict:
+  _target_: ml.datamodule.datasets.WeaklyLabeledBagOfTilesDataset

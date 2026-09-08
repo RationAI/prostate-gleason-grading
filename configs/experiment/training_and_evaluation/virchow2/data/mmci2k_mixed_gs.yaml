@@ -2,7 +2,7 @@
 
 defaults:
   - /data/mmci2k_224@data
-  - /datamodule/embedding_datamodule@datamodule
+  - /datamodule/embedding_samples_datamodule@datamodule
   - _self_
 
 data_info: "ValFold=${validation_fold}"
