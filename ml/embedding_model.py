@@ -11,7 +11,7 @@ from ml.typing import LabeledSampleBatch
 
 
 if TYPE_CHECKING:
-    from ml.datamodule.data_module import DataModule
+    from ml.datamodule import SamplesDataModule
 
 
 class EmbeddingGleasonModel(GleasonModel):
@@ -111,7 +111,7 @@ class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
     def _validate_requirements(self) -> None:
 
         trainer: pl.Trainer = self.trainer
-        datamodule: DataModule = cast("Any", trainer).datamodule
+        datamodule: SamplesDataModule = cast("Any", trainer).datamodule
         classifier: Classifier = self.decode_head
 
         samples_per_epoch = trainer.num_training_batches * datamodule.batch_size

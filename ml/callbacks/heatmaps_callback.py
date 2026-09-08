@@ -18,7 +18,7 @@ from ml.typing import LabeledSampleBatch, MetadataBatch, UnlabeledSampleBatch
 
 if TYPE_CHECKING:
     from ml.base import GleasonModel
-    from ml.datamodule import DataModule
+    from ml.datamodule import SamplesDataModule
     from ml.datamodule.datasets.base import TileDataset
 
 
@@ -65,7 +65,7 @@ class HeatmapCallback(MultiloaderLifecycle):
         dataloader_idx: int,
     ) -> None:
 
-        datamodule: DataModule = cast("Any", trainer).datamodule
+        datamodule: SamplesDataModule = cast("Any", trainer).datamodule
         dataset = getattr(datamodule, mode).datasets[dataloader_idx]
         self._slide = cast("TileDataset[Any, Any]", dataset).slide
 

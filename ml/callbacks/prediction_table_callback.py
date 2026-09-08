@@ -10,7 +10,7 @@ from ml.typing import UnlabeledSampleBatch
 
 if TYPE_CHECKING:
     from ml.base import GleasonModel
-    from ml.datamodule import DataModule
+    from ml.datamodule import SamplesDataModule
     from ml.datamodule.datasets.base import TileDataset
 
 
@@ -45,7 +45,7 @@ class PredictionTableCallback(MultiloaderLifecycle):
         self, trainer: Trainer, pl_module: LightningModule, dataloader_idx: int
     ) -> None:
 
-        datamodule: DataModule = cast("Any", trainer).datamodule
+        datamodule: SamplesDataModule = cast("Any", trainer).datamodule
         dataset = datamodule.predict.datasets[dataloader_idx]
         self.slide = cast("TileDataset[Any, Any]", dataset).slide["stem"]
 
