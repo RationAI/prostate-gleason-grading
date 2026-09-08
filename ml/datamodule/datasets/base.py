@@ -38,9 +38,8 @@ class Tiles:
     def __getitem__(self, idx: int) -> Tile:
         return self._tiles[self._index_map[idx]]
 
-    @property
-    def tiles(self) -> HFDataset:
-        return self._tiles.select(self._index_map)
+    def columns_as_tensors(self, columns: list[str]) -> dict[str, Tensor]:
+        return self._tiles.with_format("torch", columns)[self._index_map.tolist()]
 
 
 class TileDataset[S, B](Dataset[S]):

@@ -32,14 +32,10 @@ class EmbeddingsTileDataset:
         )
 
     def _get_bag(self) -> tuple[Tensor, BagMetadata]:
-        tiles = self.tiles.tiles
+        tiles = self.tiles.columns_as_tensors([self.embeddings_col, "x", "y"])
         return (
-            torch.as_tensor(tiles[self.embeddings_col]),
-            BagMetadata(
-                slide=self.slide["stem"],
-                x=torch.as_tensor(tiles["x"]),
-                y=torch.as_tensor(tiles["y"]),
-            ),
+            tiles[self.embeddings_col],
+            BagMetadata(slide=self.slide["stem"], x=tiles["x"], y=tiles["y"]),
         )
 
 
