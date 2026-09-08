@@ -5,8 +5,8 @@ import torch
 from torch import Tensor, nn
 from torch.optim import LBFGS, AdamW, Optimizer
 
-from ml.base import GleasonModel
-from ml.modeling.decode_head.base import Classifier
+from ml.modeling.base import TLGleasonModel
+from ml.modeling.decode_head import Classifier
 from ml.typing import LabeledSampleBatch
 
 
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from ml.datamodule import SamplesDataModule
 
 
-class EmbeddingGleasonModel(GleasonModel):
+class EmbeddingTLGleasonModel(TLGleasonModel):
     def __init__(self, num_classes: int, decode_head: Classifier) -> None:
         super().__init__(num_classes)
         self.decode_head = decode_head
@@ -23,7 +23,7 @@ class EmbeddingGleasonModel(GleasonModel):
         return self.decode_head(x)
 
 
-class AdamWEmbeddingGleasonModel(EmbeddingGleasonModel):
+class AdamWEmbeddingTLGleasonModel(EmbeddingTLGleasonModel):
     def __init__(
         self,
         num_classes: int,
@@ -48,7 +48,7 @@ class AdamWEmbeddingGleasonModel(EmbeddingGleasonModel):
         )
 
 
-class LBFGSEmbeddingsGleasonModel(EmbeddingGleasonModel):
+class LBFGSEmbeddingsTLGleasonModel(EmbeddingTLGleasonModel):
     def __init__(
         self,
         num_classes: int,

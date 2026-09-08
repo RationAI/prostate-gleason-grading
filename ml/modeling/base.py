@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 from lightning import LightningModule
 from lightning.pytorch import loggers
 from matplotlib import pyplot as plt
-from torch import Tensor, nn, softmax
+from torch import Tensor, argmax, nn, softmax
 from torch.optim.optimizer import Optimizer
 from torchmetrics import Metric, MetricCollection
 from torchmetrics.classification import (
@@ -18,7 +19,12 @@ from torchmetrics.classification import (
     MulticlassSpecificity,
 )
 
-from ml.typing import LabeledSampleBatch, UnlabeledSampleBatch
+from ml.typing import (
+    LabeledSampleBatch,
+    UnlabeledBagBatch,
+    UnlabeledSampleBatch,
+    WeaklyLabeledBagBatch,
+)
 
 
 def metrics(
@@ -41,7 +47,7 @@ def metrics(
     return MetricCollection(metrics_dict, prefix=prefix)
 
 
-class GleasonModel(ABC, LightningModule):
+class GleasonModel[T_TrainBatch, T_PredictBatch](ABC, LightningModule):
     def __init__(self, num_classes: int) -> None:
         super().__init__()
 
@@ -61,11 +67,20 @@ class GleasonModel(ABC, LightningModule):
         pass
 
     @abstractmethod
-    def configure_optimizers(self) -> Optimizer:
+    def process_train_batch(
+        self, batch: T_TrainBatch
+    ) -> tuple[Tensor, Tensor, dict[str, Any]]:
         pass
 
-    def _logits_to_prob(self, logits: Tensor) -> Tensor:
-        return softmax(logits, dim=1)
+    @abstractmethod
+    def process_predict_batch(
+        self, batch: T_PredictBatch
+    ) -> tuple[Tensor, dict[str, Any]]:
+        pass
+
+    @abstractmethod
+    def configure_optimizers(self) -> Optimizer:
+        pass
 
     def _log_metrics(self, metrics: MetricCollection) -> None:
         computed = metrics.compute()
@@ -93,15 +108,14 @@ class GleasonModel(ABC, LightningModule):
 
         cm.reset()
 
-    def training_step(self, batch: LabeledSampleBatch, batch_idx: int) -> Tensor | None:
-        inputs, _, targets = batch
-        logits = self(inputs)
+    def training_step(self, batch: T_TrainBatch, batch_idx: int) -> Tensor | None:
+        logits, targets, _ = self.process_train_batch(batch)
 
         loss = self.criterion(logits, targets)
         self.log(
             "train/loss",
             loss,
-            batch_size=len(inputs),
+            batch_size=logits.shape[0],
             on_step=True,
             on_epoch=True,
             prog_bar=True,
@@ -112,15 +126,14 @@ class GleasonModel(ABC, LightningModule):
 
         return loss
 
-    def validation_step(self, batch: LabeledSampleBatch) -> None:
-        inputs, _, targets = batch
-        logits = self(inputs)
+    def validation_step(self, batch: T_TrainBatch) -> None:
+        logits, targets, _ = self.process_train_batch(batch)
 
         loss = self.criterion(logits, targets)
         self.log(
             "validation/loss",
             loss,
-            batch_size=len(inputs),
+            batch_size=logits.shape[0],
             on_epoch=True,
             prog_bar=True,
         )
@@ -129,21 +142,28 @@ class GleasonModel(ABC, LightningModule):
         self.val_metrics.update(logits, targets)
 
     def test_step(
-        self, batch: LabeledSampleBatch, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
-        inputs, _, targets = batch
-        logits = self(inputs)
+        self, batch: T_TrainBatch, batch_idx: int, dataloader_idx: int = 0
+    ) -> dict[str, Any]:
+        logits, targets, metadata = self.process_train_batch(batch)
+
+        loss = self.criterion(logits, targets)
+        prob = softmax(logits, dim=1).detach()
+        pred = argmax(prob, dim=1)
 
         self.test_cm.update(logits, targets)
         self.test_metrics.update(logits, targets)
 
-        return self._logits_to_prob(logits).detach()
+        return {"loss": loss, "prob": prob, "pred": pred, **metadata}
 
     def predict_step(
-        self, batch: UnlabeledSampleBatch, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
-        inputs, _ = batch
-        return self._logits_to_prob(self(inputs)).detach()
+        self, batch: T_PredictBatch, batch_idx: int, dataloader_idx: int = 0
+    ) -> dict[str, Any]:
+        logits, metadata = self.process_predict_batch(batch)
+
+        prob = softmax(logits, dim=1).detach()
+        pred = argmax(prob, dim=1)
+
+        return {"prob": prob, "pred": pred, **metadata}
 
     def on_train_epoch_end(self) -> None:
         self._log_metrics(self.train_metrics)
@@ -156,3 +176,23 @@ class GleasonModel(ABC, LightningModule):
     def on_test_epoch_end(self) -> None:
         self._log_metrics(self.test_metrics)
         self._log_confusion_matrix(self.test_cm, "test")
+
+
+class TLGleasonModel(GleasonModel[LabeledSampleBatch, UnlabeledSampleBatch]):
+    def process_train_batch(
+        self,
+        batch: LabeledSampleBatch,
+    ) -> tuple[Tensor, Tensor, dict[str, Any]]:
+        inputs, metadata, targets = batch
+        logits = self(inputs)
+        return logits, targets, {"metadata": metadata}
+
+    def process_predict_batch(
+        self, batch: UnlabeledSampleBatch
+    ) -> tuple[Tensor, dict[str, Any]]:
+        inputs, metadata = batch
+        logits = self(inputs)
+        return logits, {"metadata": metadata}
+
+
+class SLGleasonModel(GleasonModel[WeaklyLabeledBagBatch, UnlabeledBagBatch]): ...

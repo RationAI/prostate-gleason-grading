@@ -1,8 +1,8 @@
 defaults:
-  - decode_head@decode_head: embedding_classifier
+  - decode_head@decode_head: classifier
   - _self_
 
-_target_: ml.embedding_model.AdamWEmbeddingGleasonModel
+_target_: ml.modeling.AdamWEmbeddingTLGleasonModel
 num_classes: 3
 lr: ???
 weight_decay: ???

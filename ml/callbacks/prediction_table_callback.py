@@ -9,9 +9,9 @@ from ml.typing import UnlabeledSampleBatch
 
 
 if TYPE_CHECKING:
-    from ml.base import GleasonModel
     from ml.datamodule import SamplesDataModule
     from ml.datamodule.datasets.base import TileDataset
+    from ml.modeling.base import TLGleasonModel
 
 
 class PredictionTableCallback(MultiloaderLifecycle):
@@ -34,7 +34,7 @@ class PredictionTableCallback(MultiloaderLifecycle):
         )
 
     def on_predict_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
-        output_classes = cast("GleasonModel", pl_module).num_classes
+        output_classes = cast("TLGleasonModel", pl_module).num_classes
         if len(self.output_class_names) != output_classes:
             raise ValueError(
                 "The number of model output classes does"

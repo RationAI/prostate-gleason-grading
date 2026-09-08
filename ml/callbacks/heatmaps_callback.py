@@ -17,9 +17,9 @@ from ml.typing import LabeledSampleBatch, MetadataBatch, UnlabeledSampleBatch
 
 
 if TYPE_CHECKING:
-    from ml.base import GleasonModel
     from ml.datamodule import SamplesDataModule
     from ml.datamodule.datasets.base import TileDataset
+    from ml.modeling.base import TLGleasonModel
 
 
 class HeatmapCallback(MultiloaderLifecycle):
@@ -69,7 +69,7 @@ class HeatmapCallback(MultiloaderLifecycle):
         dataset = getattr(datamodule, mode).datasets[dataloader_idx]
         self._slide = cast("TileDataset[Any, Any]", dataset).slide
 
-        module = cast("GleasonModel", pl_module)
+        module = cast("TLGleasonModel", pl_module)
 
         self._mask_builder = MaskBuilder(
             source_extents=(self._slide["extent_y"], self._slide["extent_x"]),

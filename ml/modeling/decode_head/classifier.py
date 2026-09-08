@@ -1,9 +1,7 @@
-from abc import ABC, abstractmethod
-
 from torch import Tensor, nn
 
 
-class Classifier(ABC, nn.Module):
+class Classifier(nn.Module):
     def __init__(
         self,
         in_features: int,
@@ -20,6 +18,5 @@ class Classifier(ABC, nn.Module):
         self.dropout = nn.Dropout(p=dropout_probability)
         self.proj = nn.Linear(in_features, out_features)
 
-    @abstractmethod
     def forward(self, x: Tensor) -> Tensor:
-        pass
+        return self.proj(self.dropout(x))
