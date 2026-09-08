@@ -1,4 +1,12 @@
-from ml.datamodule.datamodule import DataModule
+from ml.datamodule.bags_datamodule import (
+    FullyLabeledBagsDataModule,
+    WeaklyLabeledBagsDataModule,
+)
+from ml.datamodule.samples_datamodule import SamplesDataModule
 
 
-__all__ = ["DataModule"]
+__all__ = [
+    "FullyLabeledBagsDataModule",
+    "SamplesDataModule",
+    "WeaklyLabeledBagsDataModule",
+]

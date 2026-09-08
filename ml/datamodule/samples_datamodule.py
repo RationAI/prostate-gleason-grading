@@ -15,7 +15,7 @@ from ml.typing import (
 )
 
 
-class DataModule(LightningDataModule):
+class SamplesDataModule(LightningDataModule):
     train: FullyLabeledSlideDataset
     val: FullyLabeledSlideDataset
     test: FullyLabeledSlideDataset

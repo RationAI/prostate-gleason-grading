@@ -427,10 +427,25 @@ class BagOfTilesDataset[B](Dataset[B]):
         return self.bags[idx].as_bag()
 
 
+class LabeledBagOfTilesDataset[B](BagOfTilesDataset[B]):
+    def __init__(self, slide_dataset: LabeledSlideDataset[Any, B]) -> None:
+        super().__init__(slide_dataset)
+
+    def get_labels(self) -> Tensor:
+
+        labels: list[Tensor] = []
+
+        for bag in self.bags:
+            assert isinstance(bag, LabeledTileDataset)
+            labels.append(bag.slide_label)
+
+        return torch.cat(labels) if labels else torch.tensor([], dtype=torch.long)
+
+
 class UnlabeledBagOfTilesDataset(BagOfTilesDataset[UnlabeledBag]): ...
 
 
-class WeaklyLabeledBagOfTilesDataset(BagOfTilesDataset[WeaklyLabeledBag]): ...
+class WeaklyLabeledBagOfTilesDataset(LabeledBagOfTilesDataset[WeaklyLabeledBag]): ...
 
 
-class FullyLabeledBagOfTilesDataset(BagOfTilesDataset[FullyLabeledBag]): ...
+class FullyLabeledBagOfTilesDataset(LabeledBagOfTilesDataset[FullyLabeledBag]): ...
