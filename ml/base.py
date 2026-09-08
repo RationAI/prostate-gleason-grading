@@ -5,7 +5,7 @@ from lightning.pytorch import loggers
 from matplotlib import pyplot as plt
 from torch import Tensor, nn, softmax
 from torch.optim.optimizer import Optimizer
-from torchmetrics import MetricCollection
+from torchmetrics import Metric, MetricCollection
 from torchmetrics.classification import (
     MulticlassAccuracy,
     MulticlassAUROC,
@@ -17,9 +17,28 @@ from torchmetrics.classification import (
     MulticlassRecall,
     MulticlassSpecificity,
 )
-from torchmetrics.wrappers import ClasswiseWrapper
 
 from ml.typing import LabeledSampleBatch, UnlabeledSampleBatch
+
+
+def metrics(
+    prefix: str, num_classes: int, argmax_only: bool = False
+) -> MetricCollection:
+
+    metrics_dict: dict[str, Metric | MetricCollection] = {
+        "ACC": MulticlassAccuracy(num_classes),
+        "QWK": MulticlassCohenKappa(num_classes, weights="quadratic"),
+        "F1": MulticlassF1Score(num_classes),
+        "Sensitivity": MulticlassRecall(num_classes),
+        "Specificity": MulticlassSpecificity(num_classes),
+        "PPV": MulticlassPrecision(num_classes),
+        "NPV": MulticlassNegativePredictiveValue(num_classes),
+    }
+
+    if not argmax_only:
+        metrics_dict["AUROC"] = MulticlassAUROC(num_classes)
+
+    return MetricCollection(metrics_dict, prefix=prefix)
 
 
 class GleasonModel(ABC, LightningModule):
@@ -29,51 +48,9 @@ class GleasonModel(ABC, LightningModule):
         self.num_classes = num_classes
         self.criterion = nn.CrossEntropyLoss()
 
-        macro_metrics = {
-            "AUROC": MulticlassAUROC(num_classes=num_classes),
-            "accuracy": MulticlassAccuracy(num_classes=num_classes),
-            "precision": MulticlassPrecision(num_classes=num_classes),
-            "recall": MulticlassRecall(num_classes=num_classes),
-            "f1": MulticlassF1Score(num_classes=num_classes),
-            "specificity": MulticlassSpecificity(num_classes=num_classes),
-            "npv": MulticlassNegativePredictiveValue(num_classes=num_classes),
-            "cohen_kappa": MulticlassCohenKappa(
-                num_classes=num_classes,
-                weights="quadratic",
-            ),
-        }
-
-        per_class_metrics = {
-            "AUROC_per_class": ClasswiseWrapper(
-                MulticlassAUROC(num_classes=num_classes, average=None),
-            ),
-            "precision_per_class": ClasswiseWrapper(
-                MulticlassPrecision(num_classes=num_classes, average=None),
-            ),
-            "recall_per_class": ClasswiseWrapper(
-                MulticlassRecall(num_classes=num_classes, average=None),
-            ),
-            "f1_per_class": ClasswiseWrapper(
-                MulticlassF1Score(num_classes=num_classes, average=None),
-            ),
-            "specificity_per_class": ClasswiseWrapper(
-                MulticlassSpecificity(num_classes=num_classes, average=None),
-            ),
-            "npv_per_class": ClasswiseWrapper(
-                MulticlassNegativePredictiveValue(
-                    num_classes=num_classes, average=None
-                ),
-            ),
-        }
-
-        metrics = MetricCollection(
-            {**macro_metrics, **per_class_metrics},
-            compute_groups=False,
-        )
-
-        self.train_metrics = metrics.clone(prefix="train/")
-        self.val_metrics = metrics.clone(prefix="validation/")
-        self.test_metrics = metrics.clone(prefix="test/")
+        self.train_metrics = metrics("train/", num_classes)
+        self.val_metrics = metrics("val/", num_classes)
+        self.test_metrics = metrics("test/", num_classes)
 
         self.train_cm = MulticlassConfusionMatrix(num_classes=num_classes)
         self.val_cm = MulticlassConfusionMatrix(num_classes=num_classes)
@@ -160,13 +137,13 @@ class GleasonModel(ABC, LightningModule):
         self.test_cm.update(logits, targets)
         self.test_metrics.update(logits, targets)
 
-        return self._logits_to_prob(logits)
+        return self._logits_to_prob(logits).detach()
 
     def predict_step(
         self, batch: UnlabeledSampleBatch, batch_idx: int, dataloader_idx: int = 0
     ) -> Tensor:
         inputs, _ = batch
-        return self._logits_to_prob(self(inputs))
+        return self._logits_to_prob(self(inputs)).detach()
 
     def on_train_epoch_end(self) -> None:
         self._log_metrics(self.train_metrics)
@@ -174,7 +151,7 @@ class GleasonModel(ABC, LightningModule):
 
     def on_validation_epoch_end(self) -> None:
         self._log_metrics(self.val_metrics)
-        self._log_confusion_matrix(self.val_cm, "validation")
+        self._log_confusion_matrix(self.val_cm, "val")
 
     def on_test_epoch_end(self) -> None:
         self._log_metrics(self.test_metrics)
