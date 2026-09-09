@@ -48,7 +48,7 @@ def collate_fn(batch: Sequence[Bag]) -> BagBatch:
     stacked_labels = (
         torch.stack(l)
         if l[0].ndim == 0
-        else pad_sequence(list(l), batch_first=True, padding_value=-1)
+        else pad_sequence(list(l), batch_first=True, padding_value=-100)
         for l in labels
     )
 
