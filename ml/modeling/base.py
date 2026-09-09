@@ -63,10 +63,6 @@ class GleasonModel[T_TrainBatch, T_PredictBatch](ABC, LightningModule):
         self.test_cm = MulticlassConfusionMatrix(num_classes=num_classes)
 
     @abstractmethod
-    def forward(self, x: Tensor) -> Tensor:
-        pass
-
-    @abstractmethod
     def process_train_batch(
         self, batch: T_TrainBatch
     ) -> tuple[Tensor, Tensor, dict[str, Any]]:
