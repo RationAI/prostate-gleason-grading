@@ -4,6 +4,7 @@ defaults:
   - datasets@test: embeddings/fully_labeled
   - datasets@predict: embeddings/unlabeled
   - samplers@sampler: stratified_weighted_random
+  - labels_maps: pure_gs_to_gp
 
 _target_: ml.datamodule.SamplesDataModule
 batch_size: ???

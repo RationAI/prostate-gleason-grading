@@ -1,0 +1,11 @@
+# @package _global_
+
+labels_map:
+  # mmci2k does not have any 5+5 cases, therefore it was
+  # decided to consider GP3 and GP4+ = {GP4, GP5} meaning
+  # 4+5 or 5+4 is pure GP4+ slide
+  "None": 0
+  "3+3": 1
+  "4+4": 2
+  "4+5": 2
+  "5+4": 2

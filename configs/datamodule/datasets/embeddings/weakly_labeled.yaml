@@ -5,8 +5,4 @@ embeddings_col: ???
 fold: ???
 invert_fold_selection: ???
 qc_and_tissue_thresholds: ${data.dataset.thresholds}
-labels_map:
-  "None": 0
-  "3+3": 1
-  "4+4": 2
-  "4+5": 2
+labels_map: ${labels_map}

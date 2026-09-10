@@ -4,6 +4,7 @@ defaults:
   - datasets@test.slide_dataset: embeddings/weakly_labeled
   - datasets@predict.slide_dataset: embeddings/unlabeled
   - samplers@sampler: stratified_weighted_random
+  - labels_maps: isup
 
 _target_: ml.datamodule.WeaklyLabeledBagsDataModule
 batch_size: ???

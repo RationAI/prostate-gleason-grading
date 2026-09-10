@@ -4,6 +4,7 @@ defaults:
   - datasets@test.slide_dataset: embeddings/fully_labeled
   - datasets@predict.slide_dataset: embeddings/unlabeled
   - samplers@sampler: stratified_weighted_random
+  - labels_maps: ???
 
 _target_: ml.datamodule.FullyLabeledBagsDataModule
 batch_size: ???
