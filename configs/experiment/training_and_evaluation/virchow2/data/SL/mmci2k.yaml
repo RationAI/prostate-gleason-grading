@@ -1,0 +1,54 @@
+# @package _global_
+
+defaults:
+  - /data/mmci2k_224@data
+  - /datamodule/weakly_labeled_embedding_bag_datamodule@datamodule
+  - _self_
+
+data_info: "ValFold=${validation_fold}"
+
+validation_fold: null
+
+datamodule:
+  batch_size: 1024
+  num_workers: 8
+  train:
+    slide_dataset:
+      uris: [
+        "${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/train",
+        "${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits_mixed_gs}/train"
+      ]
+      paths: null
+      embeddings_col: virchow2_embedding
+      fold: ${validation_fold}
+      invert_fold_selection: True
+  val:
+    slide_dataset:
+      uris: [
+        "${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/train",
+        "${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits_mixed_gs}/train"
+      ]
+      paths: null
+      embeddings_col: virchow2_embedding
+      fold: ${validation_fold}
+      invert_fold_selection: False
+  test:
+    slide_dataset:
+      uris: [
+        "${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/test",
+        "${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits_mixed_gs}/test"
+      ]
+      paths: null
+      embeddings_col: virchow2_embedding
+      fold: null
+      invert_fold_selection: False
+  predict:
+    slide_dataset:
+      uris: [
+        "${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits}/test",
+        "${data.dataset.mlflow_uris.embeddings.virchow2_tiling_splits_mixed_gs}/test"
+      ]
+      paths: null
+      embeddings_col: virchow2_embedding
+      fold: null
+      invert_fold_selection: False
