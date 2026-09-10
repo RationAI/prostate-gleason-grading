@@ -2,12 +2,12 @@ from kube_jobs import submit_job
 
 
 submit_job(
-    job_name="prostate-gleason-train-virchow2-lbfgs",
+    job_name="prostate-gleason-train-virchow2-abmil",
     username=...,
     image="cerit.io/rationai/base:2.0.6",
     cpu=10,
     gpu=...,
-    memory="190Gi",
+    memory="40Gi",
     public=False,
     script=[
         "export MLFLOW_TRACKING_URI=http://mlflow-s3.rationai-mlflow",
@@ -16,9 +16,9 @@ submit_job(
         "uv sync",
         """uv run -m ml \
            experiment=/training_and_evaluation/virchow2/train \
-           experiment/training_and_evaluation/virchow2/data=TL/mmci2k \
-           experiment/training_and_evaluation/virchow2/model=TL/lbfgs \
-           validation_fold=... model.weight_decay=... \
+           experiment/training_and_evaluation/virchow2/data=SL/mmci2k \
+           experiment/training_and_evaluation/virchow2/model=SL/abmil \
+           validation_fold=... model.weight_decay=... model.lr=... model.attention_dim=... \
         """,
     ],
 )
