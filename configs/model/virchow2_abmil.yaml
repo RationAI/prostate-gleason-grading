@@ -1,0 +1,14 @@
+defaults:
+  - decode_head@classifier: classifier
+  - _self_
+
+_target_: ml.modeling.EmbeddingAttentionBasedMILGleasonModel
+num_classes: 6
+lr: ???
+adamw_kwargs: {}
+weight_decay: 0.0
+attention_dim: 512
+classifier:
+  in_features: 2560
+  out_features: ${..num_classes}
+  dropout_probability: 0
