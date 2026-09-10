@@ -10,7 +10,7 @@ data_info: "ValFold=${validation_fold}"
 validation_fold: null
 
 datamodule:
-  batch_size: 1024
+  batch_size: 4
   num_workers: 8
   train:
     slide_dataset:
