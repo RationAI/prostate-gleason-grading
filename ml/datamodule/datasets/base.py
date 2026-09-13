@@ -439,7 +439,7 @@ class LabeledBagOfTilesDataset[B](BagOfTilesDataset[B]):
             assert isinstance(bag, LabeledTileDataset)
             labels.append(bag.slide_label)
 
-        return torch.cat(labels) if labels else torch.tensor([], dtype=torch.long)
+        return torch.stack(labels) if labels else torch.tensor([], dtype=torch.long)
 
 
 class UnlabeledBagOfTilesDataset(BagOfTilesDataset[UnlabeledBag]): ...
