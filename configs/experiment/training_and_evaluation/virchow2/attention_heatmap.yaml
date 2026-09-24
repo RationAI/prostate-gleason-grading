@@ -1,0 +1,17 @@
+# @package _global_
+
+defaults:
+  - /experiment/training_and_evaluation/virchow2/data/SL: ???
+  - /experiment/training_and_evaluation/virchow2/model/SL: ???
+  - /callbacks/heatmaps/attention_heatmap
+  - _self_
+
+mode: predict
+
+checkpoint: ???
+
+model_name: ???
+
+metadata:
+  run_name: "ATTENTION HEATMAPS: ${model_name} ${data.dataset.name}"
+  description: "ATTENTION HEATMAPS: ${model_name} ${data.dataset.name}"

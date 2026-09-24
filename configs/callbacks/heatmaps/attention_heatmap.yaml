@@ -1,0 +1,5 @@
+# @package callbacks.attention_heatmap
+
+_target_: ml.callbacks.AttentionHeatmapCallback
+save_artifact_path: "heatmaps/attention"
+save_dir: null
