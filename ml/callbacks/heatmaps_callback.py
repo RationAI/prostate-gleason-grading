@@ -13,7 +13,7 @@ from ratiopath.masks import write_big_tiff
 from ratiopath.masks.mask_builders import MaskBuilder
 from ratiopath.masks.mask_builders.aggregation import MeanAggregator
 
-from ml.typing import LabeledSampleBatch, MetadataBatch, UnlabeledSampleBatch
+from ml.typing import MetadataBatch
 
 
 if TYPE_CHECKING:
@@ -85,26 +85,24 @@ class HeatmapCallback(MultiloaderLifecycle):
         self,
         trainer: Trainer,
         pl_module: LightningModule,
-        outputs: torch.Tensor,
-        batch: UnlabeledSampleBatch,
+        outputs: dict[str, Any],
+        batch: Any,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
-        _, metadata = batch
-        self._on_batch_end(outputs, metadata)
+        self._on_batch_end(outputs["prob"], outputs["metadata"])
 
     def on_test_batch_end(
         self,
         trainer: Trainer,
         pl_module: LightningModule,
         outputs: torch.Tensor | Mapping[str, Any] | None,
-        batch: LabeledSampleBatch,
+        batch: Any,
         batch_idx: int,
         dataloader_idx: int = 0,
     ) -> None:
-        _, metadata, _ = batch
-        assert isinstance(outputs, torch.Tensor)
-        self._on_batch_end(outputs, metadata)
+        assert isinstance(outputs, dict)
+        self._on_batch_end(outputs["prob"], outputs["metadata"])
 
     def _on_batch_end(self, outputs: torch.Tensor, metadata: MetadataBatch) -> None:
 
