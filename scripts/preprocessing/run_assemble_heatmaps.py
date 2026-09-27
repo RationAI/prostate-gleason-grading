@@ -9,9 +9,9 @@ submit_job(
     memory="8Gi",
     public=False,
     script=[
-        "git clone https://gitlab.ics.muni.cz/rationai/digital-pathology/pathology/prostate-gleason-grading workdir",
+        "git clone https://github.com/RationAI/prostate-gleason-grading.git workdir",
         "cd workdir",
         "uv sync",
-        "uv run -m preprocessing.assemble_heatmaps +data=mmci2k_224",
+        "uv run -m preprocessing.assemble_heatmaps +data=...",
     ],
 )
