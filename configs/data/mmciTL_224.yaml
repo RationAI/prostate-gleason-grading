@@ -1,7 +1,7 @@
 # @package _global_
 
 dataset:
-  name: MMCI TL
+  name: "MMCI TL 224"
   thresholds:
     tissue_roi_percentage: 0.5
     residual_percentage: 0.25

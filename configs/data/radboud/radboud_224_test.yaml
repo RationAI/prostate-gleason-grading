@@ -1,0 +1,13 @@
+# @package _global_
+
+defaults:
+  - base
+  - _self_
+
+dataset:
+  name: "Radboud 224 Test"
+  mlflow_uris:
+    tiling: "mlflow-artifacts:/38/4cab0908f7eb4d0aba64407af072f08c/artifacts/PANDA - Radboud test"
+    tiling_with_gs: ???
+    embeddings:
+      virchow2: ???

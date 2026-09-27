@@ -1,7 +1,7 @@
 # @package _global_
 
 dataset:
-  name: MMCI 2k 512
+  name: "MMCI 2k 512"
   thresholds:
     tissue_roi_percentage: 0.5
     residual_percentage: 0.25
@@ -15,4 +15,4 @@ dataset:
     tiling_sources:
       - "mlflow-artifacts:/65/ba747c14ca6f4a6991b18f2fd9beda10/artifacts/MMCI SL Group 1 512"
       - "mlflow-artifacts:/65/a31f80e863f0461d803ae0027ffed3ae/artifacts/MMCI SL Group 2 512"
-    annotations_source: "mlflow-artifacts:/65/5a159bf29b034e08a12e9a683f84e752/artifacts/mmci_2k_prostate.csv"
+    slide_metadata: "mlflow-artifacts:/65/5a159bf29b034e08a12e9a683f84e752/artifacts/mmci_2k_prostate.csv"

@@ -1,7 +1,7 @@
 # @package _global_
 
 dataset:
-  name: MMCI 2k 224
+  name: "MMCI 2k 224"
   thresholds:
     tissue_roi_percentage: 0.5
     residual_percentage: 0.25
@@ -17,7 +17,7 @@ dataset:
     tiling_sources:
       - "mlflow-artifacts:/65/05cbc53468d24748938a1e645bfbe0fe/artifacts/MMCI SL Group 1 224"
       - "mlflow-artifacts:/65/4be5807467e74794b103dfd8a2b00e1f/artifacts/MMCI SL Group 2 224"
-    annotations_source: "mlflow-artifacts:/65/5a159bf29b034e08a12e9a683f84e752/artifacts/mmci_2k_prostate.csv"
+    slide_metadata: "mlflow-artifacts:/65/5a159bf29b034e08a12e9a683f84e752/artifacts/mmci_2k_prostate.csv"
     cancer_prediction_table: "mlflow-artifacts:/65/3152bb5ab5a840b89a61df33ec9689de/artifacts/tables/cancer_prediction_table.json"
     embeddings:
       virchow2: "mlflow-artifacts:/65/1429184febea4cdcb26616c4038c6a71/artifacts/MMCI SL All"

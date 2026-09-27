@@ -1,0 +1,13 @@
+# @package _global_
+
+defaults:
+  - base
+  - _self_
+
+dataset:
+  name: "Radboud 224 Train"
+  mlflow_uris:
+    tiling: "mlflow-artifacts:/38/d658d0c339844eec8b425b403657f086/artifacts/PANDA - Radboud train"
+    tiling_with_gs: ???
+    embeddings:
+      virchow2: ???
