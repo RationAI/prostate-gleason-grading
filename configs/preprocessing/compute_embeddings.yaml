@@ -1,0 +1,23 @@
+# @package _global_
+
+defaults:
+  - /preprocessing/encoder: ???
+  - /data: ???
+
+dataset:
+  name: ???
+  mlflow_uris:
+    tiling_with_gs: ???
+
+tiling: ${dataset.mlflow_uris.tiling_with_gs}
+
+encoder: ???
+
+output_path: ${project_path}embeddings/${encoder}/${dataset.name}
+concurrency: 64
+block_size: 128
+rows_per_file: 50000
+
+metadata:
+  run_name: EMBEDDINGS: ${encoder} ${dataset.name}
+  description: EMBEDDINGS: ${encoder} ${dataset.name}
