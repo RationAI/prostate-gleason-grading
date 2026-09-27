@@ -1,8 +1,8 @@
 # @package _global_
 
 defaults:
-  - /experiment/training_and_evaluation/virchow2/data: ???
-  - /experiment/training_and_evaluation/virchow2/model: ???
+  - /experiment/training_and_evaluation/virchow2/data/TL: ???
+  - /experiment/training_and_evaluation/virchow2/model/TL: ???
   - /callbacks/heatmaps/classification_mask
   - /callbacks/heatmaps/conditional_probability_heatmap
   - /callbacks/heatmaps/probability_heatmap

@@ -16,8 +16,8 @@ submit_job(
         "uv sync",
         """uv run -m ml \
            experiment=/training_and_evaluation/virchow2/heatmaps \
-           experiment/training_and_evaluation/virchow2/data=mmci2k \
-           experiment/training_and_evaluation/virchow2/model=lbfgs \
+           experiment/training_and_evaluation/virchow2/data/TL=mmci2k \
+           experiment/training_and_evaluation/virchow2/model/TL=lbfgs \
            model.weight_decay=0 checkpoint=...\
         """,
     ],
