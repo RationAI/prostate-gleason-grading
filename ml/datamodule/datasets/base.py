@@ -15,6 +15,30 @@ from torch.utils.data import Dataset
 T_co = TypeVar("T_co", covariant=True)
 
 
+class SlideTiles:
+    """Lightweight, lazy view of the tiles belonging to one slide.
+
+    `HFDataset.select()` was found to cause substantial memory growth when
+    creating per-slide subsets. This class avoids that by storing only the
+    selected row indices and retrieving tiles from the original dataset on
+    demand.
+
+    An alternative approach is to use `HFDataset.flatten_indices()` before
+    `HFDataset.select()`. However, this adds additional overhead and slows
+    down dataset loading.
+    """
+
+    def __init__(self, tiles: HFDataset, indices: np.ndarray) -> None:
+        self._tiles = tiles
+        self._index_map = indices
+
+    def __len__(self) -> int:
+        return len(self._index_map)
+
+    def __getitem__(self, idx: int) -> dict[str, Any]:
+        return self._tiles[self._index_map[idx]]
+
+
 class FilterableDataset(MetaTiledSlides[T_co]):
     def __init__(
         self,
@@ -124,12 +148,14 @@ class FilterableDataset(MetaTiledSlides[T_co]):
 
         return self.slides
 
-    def _filter_tiles_by_slide_and_thresholds(self, slide: dict[str, Any]) -> HFDataset:
+    def _filter_tiles_by_slide_and_thresholds(
+        self, slide: dict[str, Any]
+    ) -> SlideTiles:
 
         indices = self._slide_id_to_indices.get(slide["id"])
 
         if indices is None:
-            return self.tiles.select([])
+            return SlideTiles(self.tiles, np.empty(0, dtype=np.int64))
 
         np_indices = indices.values.to_numpy()
 
@@ -145,7 +171,7 @@ class FilterableDataset(MetaTiledSlides[T_co]):
         assert mask is not None
 
         np_indices = np_indices[mask[np_indices]]
-        return self.tiles.select(np_indices)
+        return SlideTiles(self.tiles, np_indices)
 
     def generate_datasets(self) -> Iterable[Dataset[T_co]]:
 
@@ -177,7 +203,7 @@ class FilterableDataset(MetaTiledSlides[T_co]):
     def _generate_slide_dataset(
         self,
         slide: dict[str, Any],
-        tiles: HFDataset,
+        tiles: SlideTiles,
         label: torch.Tensor | None,
     ) -> Dataset[T_co]:
         pass
