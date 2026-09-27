@@ -4,7 +4,7 @@ dataset:
   name: ???
   mlflow_uris:
     tiling: ???
-    annotations_source: ???
+    slide_metadata: ???
 
 metadata:
   run_name: GS annotations -- ${dataset.name}

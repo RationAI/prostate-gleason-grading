@@ -37,10 +37,8 @@ def stratified_group_k_fold_split(
 @autolog
 def main(config: DictConfig, logger: MLFlowLogger) -> None:
 
-    annotations_source = pd.read_csv(
-        mlflow.artifacts.download_artifacts(
-            config.dataset.mlflow_uris.annotations_source
-        )
+    slide_metadata = pd.read_csv(
+        mlflow.artifacts.download_artifacts(config.dataset.mlflow_uris.slide_metadata)
     )
 
     tiling_path = mlflow.artifacts.download_artifacts(
@@ -55,7 +53,7 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
     slides_df.gleason_score = slides_df.gleason_score.fillna("None")
 
     slides_df = slides_df.join(
-        annotations_source.set_index("slide_path")[config.group_column],
+        slide_metadata.set_index("slide_path")[config.group_column],
         on="path",
         how="left",
         validate="one_to_one",

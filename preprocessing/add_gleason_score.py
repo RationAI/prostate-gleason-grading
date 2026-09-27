@@ -11,10 +11,8 @@ from rationai.tiling.writers import save_mlflow_dataset
 @hydra.main(config_path="../configs", config_name="preprocessing", version_base=None)
 @autolog
 def main(config: DictConfig, logger: MLFlowLogger) -> None:
-    annotations_source = pd.read_csv(
-        mlflow.artifacts.download_artifacts(
-            config.dataset.mlflow_uris.annotations_source
-        )
+    slide_metadata = pd.read_csv(
+        mlflow.artifacts.download_artifacts(config.dataset.mlflow_uris.slide_metadata)
     )
 
     tiling_uri = config.dataset.mlflow_uris.tiling
@@ -26,9 +24,8 @@ def main(config: DictConfig, logger: MLFlowLogger) -> None:
     )
 
     slides_df = slides_df.join(
-        annotations_source.set_index("slide_path")["gleason_score"],
+        slide_metadata.set_index("slide_path")["gleason_score"],
         on="path",
-        validate="one_to_one",
     )
 
     save_mlflow_dataset(
