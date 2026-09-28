@@ -19,5 +19,5 @@ block_size: 128
 rows_per_file: 50000
 
 metadata:
-  run_name: EMBEDDINGS: ${encoder} ${dataset.name}
-  description: EMBEDDINGS: ${encoder} ${dataset.name}
+  run_name: "EMBEDDINGS: ${encoder} ${dataset.name}"
+  description: "EMBEDDINGS: ${encoder} ${dataset.name}"
