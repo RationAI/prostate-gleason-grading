@@ -21,12 +21,12 @@ dependencies = [
 job = ["rationai-kube-jobs"]
 
 [tool.uv.sources]
-rationai-sdk = { git = "https://gitlab.ics.muni.cz/rationai/infrastructure/rationai-sdk-python.git" }
 rationai-kube-jobs = { git = "ssh://git@gitlab.ics.muni.cz/rationai/infrastructure/kube-jobs" }
 rationai-tiling = { git = "https://gitlab.ics.muni.cz/rationai/digital-pathology/libraries/tiling.git" }
 ratiopath = { git = "https://github.com/RationAI/ratiopath.git" }
 report = { git = "https://gitlab.ics.muni.cz/rationai/digital-pathology/tools/report.git" }
 rationai-mlkit = { git = "https://github.com/RationAI/mlkit.git" }
+rationai-sdk = { git = "https://github.com/RationAI/rationai-sdk-python.git" }
 
 [dependency-groups]
 dev = [
