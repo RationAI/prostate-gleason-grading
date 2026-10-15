@@ -82,7 +82,7 @@ def compute_embeddings(
             ),
             max_concurrency=concurrency,
         )
-        .write_parquet(str(output_path / "tiles"), max_rows_per_file=rows_per_file)
+        .write_parquet(str(output_path / "tiles"), min_rows_per_file=rows_per_file)
     )
 
 
