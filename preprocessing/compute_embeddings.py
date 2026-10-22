@@ -115,7 +115,13 @@ def load_tiling(
 
     processed_tiles = get_processed_tiles(tiles_output_path)
     if processed_tiles is not None:
+        pre_filter_count = len(tiles)
         tiles = filter_processed_tiles(tiles, processed_tiles)
+        post_filter_count = len(tiles)
+        print(
+            f"Filtered out {pre_filter_count - post_filter_count} tiles out of the "
+            f"original {pre_filter_count}. There remain {post_filter_count} tiles."
+        )
 
     tiles = tiles.join(
         slides.set_index("id")[["path", "level", "tile_extent_x", "tile_extent_y"]],
