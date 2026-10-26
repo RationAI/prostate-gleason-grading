@@ -7,7 +7,9 @@ defaults:
 dataset:
   name: "Radboud 224 Test"
   mlflow_uris:
-    tiling: "mlflow-artifacts:/38/4cab0908f7eb4d0aba64407af072f08c/artifacts/PANDA - Radboud test"
-    tiling_with_gs: ???
+    tiling: "mlflow-artifacts:/38/4cab0908f7eb4d0aba64407af072f08c/artifacts/PANDA - Radboud test"  # public mlflow
+    tiling_with_gs: "mlflow-artifacts:/73/87c80b69b3894c689af92994a0ae17f3/artifacts/Radboud 224 Test"
+    gp_masks: ???
     embeddings:
       virchow2: ???
+      virchow2_with_gp: ???

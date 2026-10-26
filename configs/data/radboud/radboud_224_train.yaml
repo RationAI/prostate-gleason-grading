@@ -7,7 +7,9 @@ defaults:
 dataset:
   name: "Radboud 224 Train"
   mlflow_uris:
-    tiling: "mlflow-artifacts:/38/d658d0c339844eec8b425b403657f086/artifacts/PANDA - Radboud train"
+    tiling: "mlflow-artifacts:/38/d658d0c339844eec8b425b403657f086/artifacts/PANDA - Radboud train"  # public mlflow
     tiling_with_gs: "mlflow-artifacts:/73/3eac18e8122644f58ded172f2520f201/artifacts/Radboud 224 Train"
+    gp_masks: ???
     embeddings:
-      virchow2: ???
+      virchow2: "mlflow-artifacts:/73/9013e0219db04fda8c06c8e524922b10/artifacts/Radboud 224 Train"
+      virchow2_with_gp: ???

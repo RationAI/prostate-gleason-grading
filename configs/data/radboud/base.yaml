@@ -10,6 +10,8 @@ dataset:
   mlflow_uris:
     tiling: ???
     tiling_with_gs: ???
-    slide_metadata: "mlflow-artifacts:/38/9fdcbc70346646f9823b6cf72ec84e7e/artifacts/radboud_metadata.csv"
+    slide_metadata: "mlflow-artifacts:/38/9fdcbc70346646f9823b6cf72ec84e7e/artifacts/radboud_metadata.csv"  # public mlflow
+    gp_masks: ???
     embeddings:
       virchow2: ???
+      virchow2_with_gp: ???
