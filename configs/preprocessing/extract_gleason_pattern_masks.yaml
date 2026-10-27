@@ -1,0 +1,22 @@
+# @package _global_
+
+defaults:
+  - /data: ???
+
+dataset:
+  name: ???
+
+slides: ???
+
+masks_path: ???
+output_path: ${project_path}gp_masks/${dataset.name}
+concurrency: 4
+gleason_pattern_codes:
+  negative: [0, 1, 2]
+  gp3: [3]
+  gp4: [4]
+  gp5: [5]
+
+metadata:
+  run_name: "GLEASON PATTERN MASKS: ${dataset.name}"
+  description: "GLEASON PATTERN MASKS: ${dataset.name}"
