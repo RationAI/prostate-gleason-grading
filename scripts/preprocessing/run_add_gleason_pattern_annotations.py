@@ -12,7 +12,7 @@ submit_job(
         "git clone https://github.com/RationAI/prostate-gleason-grading.git workdir",
         "cd workdir",
         "uv sync",
-        "uv run python -m preprocessing.add_gleason_pattern_annotations data=... tiling=... masks_path=...",
+        "uv run python -m preprocessing.add_gleason_pattern_annotations data=... tiling_path=... masks_path=...",
     ],
     storage=[storage.secure.DATA, storage.secure.PROJECTS],
 )

@@ -6,7 +6,7 @@ defaults:
 dataset:
   name: ???
 
-tiling: ???
+tiling_path: ???
 
 gleason_patterns: ["gp3", "gp4", "gp5"]
 

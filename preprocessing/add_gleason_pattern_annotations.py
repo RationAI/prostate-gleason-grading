@@ -118,19 +118,22 @@ def add_annotations(
 @autolog
 def main(config: DictConfig, logger: MLFlowLogger) -> None:
 
-    tiling = Path(mlflow.artifacts.download_artifacts(config.tiling))
-
+    tiling_path = Path(config.tiling_path)
     output_path = Path(config.output_path)
     tiles_paths: list[Path] = []
 
-    if (tiling / "slides.parquet").exists() and (tiling / "tiles.parquet").exists():
-        slides_df = pd.read_parquet(tiling / "slides.parquet")
-        tiles_paths = [tiling / "tiles.parquet"]
+    if (tiling_path / "slides.parquet").exists() and (
+        tiling_path / "tiles.parquet"
+    ).exists():
+        slides_df = pd.read_parquet(tiling_path / "slides.parquet")
+        tiles_paths = [tiling_path / "tiles.parquet"]
         slides_output_path, tiles_output_path = output_path, output_path
 
-    elif (tiling / "slides/slides.parquet").exists() and (tiling / "tiles").exists():
-        slides_df = pd.read_parquet(tiling / "slides/slides.parquet")
-        tiles_paths = list((tiling / "tiles").glob("*.parquet"))
+    elif (tiling_path / "slides/slides.parquet").exists() and (
+        tiling_path / "tiles"
+    ).exists():
+        slides_df = pd.read_parquet(tiling_path / "slides/slides.parquet")
+        tiles_paths = list((tiling_path / "tiles").glob("*.parquet"))
         slides_output_path = output_path / "slides"
         tiles_output_path = output_path / "tiles"
 
