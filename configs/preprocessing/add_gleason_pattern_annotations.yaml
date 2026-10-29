@@ -1,0 +1,20 @@
+# @package _global_
+
+defaults:
+  - /data: ???
+
+dataset:
+  name: ???
+
+tiling: ???
+
+gleason_patterns: ["gp3", "gp4", "gp5"]
+
+roi: [56, 56, 168, 168]
+
+masks_path: ???
+output_path: ${project_path}gp_overlaps_tiling/${dataset.name}
+
+metadata:
+  run_name: "GLEASON PATTERN OVERLAPS TILING: ${dataset.name}"
+  description: "GLEASON PATTERN OVERLAPS TILING: ${dataset.name}"
