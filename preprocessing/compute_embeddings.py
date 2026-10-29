@@ -105,6 +105,8 @@ def get_processed_tiles(tiles_path: Path) -> pd.DataFrame | None:
     if processed_tiles:
         return pd.concat(processed_tiles, ignore_index=True).drop_duplicates()
 
+    return None
+
 
 def load_tiling(
     tiling_path: Path, tiles_output_path: Path
