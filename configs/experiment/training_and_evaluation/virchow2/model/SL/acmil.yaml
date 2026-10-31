@@ -1,0 +1,27 @@
+# @package _global_
+
+defaults:
+  - /model/virchow2_acmil@model
+  - /callbacks/checkpointing
+  - /callbacks/early_stopping
+  - _self_
+
+trainer:
+  enable_checkpointing: True
+  enable_progress_bar: True
+  enable_model_summary: True
+  log_every_n_steps: 5
+  val_check_interval: 0.2
+
+model_name: "Virchow2-ACMIL"
+hparams: "WD=${model.weight_decay} LR=${model.lr} AD=${model.attention_dim} MLPD=${model.mlp_hidden_dim} LB=${model.loss_b_weight} LP=${model.loss_p_weight} LD=${model.loss_d_weight} K=${model.stkim_k} P=${model.stkim_p}"
+model:
+  lr: ???
+  weight_decay: ???
+  attention_dim: ???
+  mlp_hidden_dim: ???
+  stkim_k: ???
+  stkim_p: ???
+  loss_b_weight: ???
+  loss_p_weight: ???
+  loss_d_weight: ???
