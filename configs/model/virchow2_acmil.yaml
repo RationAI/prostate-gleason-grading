@@ -1,0 +1,14 @@
+_target_: ml.modeling.EmbeddingAttentionBasedMILGleasonModel
+num_classes: 10
+embedding_dim: 2560
+
+lr: 1e-5
+adamw_kwargs: {}
+weight_decay: 0.0
+attention_dim: 512
+mlp_hidden_dim: [256]
+stkim_k: 10
+stkim_p: 0.6
+loss_b_weight: 1.0
+loss_p_weight: 0.5
+loss_d_weight: 0.2
