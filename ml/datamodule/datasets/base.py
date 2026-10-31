@@ -222,10 +222,18 @@ class LabeledSlideDataset[S, B](SlideDataset[S, B]):
         uris: Iterable[str] | None = None,
         paths: Iterable[Path | str] | None = None,
     ) -> None:
-        if labels_map.get("None") != 0:
+        if labels_map.get("None", 0) != 0 or labels_map.get("negative", 0) != 0:
             raise ValueError("Label of negative slides is expected to be 0.")
 
         self.labels_map = labels_map
+        self.labels_map_inverse: dict[int, str] | None = None
+
+        labels_map_inverse = {v: k for k, v in labels_map.items() if v != 0}
+        if len(labels_map_inverse) == (
+            len(labels_map) - sum(v == 0 for v in labels_map.values())
+        ):
+            labels_map_inverse[0] = "negative"
+            self.labels_map_inverse = labels_map_inverse
 
         super().__init__(
             qc_and_tissue_thresholds=qc_and_tissue_thresholds,
