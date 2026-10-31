@@ -1,0 +1,45 @@
+# @package _global_
+
+defaults:
+  - /data/radboud/base@data
+  - /data/radboud/radboud_224_train@train_data
+  - /data/radboud/radboud_224_val@val_data
+  - /data/radboud/radboud_224_test@test_data
+  - /datamodule/weakly_labeled_embedding_bag_datamodule@datamodule
+  - _self_
+
+data_info: ""
+
+validation_fold: null
+
+datamodule:
+  batch_size: 4
+  num_workers: 8
+  train:
+    slide_dataset:
+      uris: ["${train_data.dataset.mlflow_uris.embeddings.virchow2}"]
+      paths: null
+      embeddings_col: embedding
+      fold: null
+      invert_fold_selection: False
+  val:
+    slide_dataset:
+      uris: ["${val_data.dataset.mlflow_uris.embeddings.virchow2}"]
+      paths: null
+      embeddings_col: embedding
+      fold: null
+      invert_fold_selection: False
+  test:
+    slide_dataset:
+      uris: ["${test_data.dataset.mlflow_uris.embeddings.virchow2}"]
+      paths: null
+      embeddings_col: embedding
+      fold: null
+      invert_fold_selection: False
+  predict:
+    slide_dataset:
+      uris: ["${test_data.dataset.mlflow_uris.embeddings.virchow2}"]
+      paths: null
+      embeddings_col: embedding
+      fold: null
+      invert_fold_selection: False
