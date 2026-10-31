@@ -11,5 +11,5 @@ dataset:
     tiling_with_gs: "mlflow-artifacts:/73/87c80b69b3894c689af92994a0ae17f3/artifacts/Radboud 224 Test"
     gp_masks: ???
     embeddings:
-      virchow2: ???
+      virchow2: "mlflow-artifacts:/73/39288bd4e4ec46bd87d02dabc1b9ecd7/artifacts/Radboud 224 Test"
       virchow2_with_gp: ???

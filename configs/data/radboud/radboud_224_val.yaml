@@ -9,7 +9,7 @@ dataset:
   mlflow_uris:
     tiling: "mlflow-artifacts:/38/33ad08ab5f9845809fb48b2b7d2aa643/artifacts/PANDA - Radboud val"  # public mlflow
     tiling_with_gs: "mlflow-artifacts:/73/cb0740be0c8442f09fd91a69a9ed2bcf/artifacts/Radboud 224 Val"
-    gp_masks: ???
+    gp_masks: "mlflow-artifacts:/73/574f2fe79c474bb58166c1bac24d12c4/artifacts/Radboud 224 Val"
     embeddings:
-      virchow2: ???
+      virchow2: "mlflow-artifacts:/73/65587202f3f948d4b3736e170cc170d4/artifacts/Radboud 224 Val"
       virchow2_with_gp: ???
