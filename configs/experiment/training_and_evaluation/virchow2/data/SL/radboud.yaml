@@ -6,6 +6,7 @@ defaults:
   - /data/radboud/radboud_224_val@val_data
   - /data/radboud/radboud_224_test@test_data
   - /datamodule/weakly_labeled_embedding_bag_datamodule@datamodule
+  - labels_maps: gs
   - _self_
 
 data_info: ""
