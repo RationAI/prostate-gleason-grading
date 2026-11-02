@@ -155,7 +155,9 @@ class EmbeddingAttentionChallengingMILGleasonModel(SLGleasonModel):
 
     def gleason_score_to_gleason_patterns(self, labels: Tensor) -> Tensor:
 
-        labels_map = cast("Any", self.trainer).datamodule.train.labels_map_inverse
+        labels_map = cast(
+            "Any", self.trainer
+        ).datamodule.train.slide_dataset.labels_map_inverse
         if labels_map is None:
             raise RuntimeError("Labels are expected to be invertible.")
 
