@@ -272,7 +272,7 @@ class LabeledSlideDataset[S, B](SlideDataset[S, B]):
 
         for dataset in self.datasets:
             assert isinstance(dataset, LabeledTileDataset)
-            labels[dataset.slide["stem"]] = dataset.slide_label
+            labels[Path(dataset.slide["path"]).stem] = dataset.slide_label
 
         return labels
 

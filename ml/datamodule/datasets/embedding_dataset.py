@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 import torch
@@ -28,14 +29,16 @@ class EmbeddingsTileDataset:
         tile = self.tiles[idx]
         return (
             torch.as_tensor(tile[self.embeddings_col]),
-            Metadata(slide=self.slide["stem"], x=tile["x"], y=tile["y"]),
+            Metadata(slide=Path(self.slide["path"]).stem, x=tile["x"], y=tile["y"]),
         )
 
     def _get_bag(self) -> tuple[Tensor, BagMetadata]:
         tiles = self.tiles.columns_as_tensors([self.embeddings_col, "x", "y"])
         return (
             tiles[self.embeddings_col],
-            BagMetadata(slide=self.slide["stem"], x=tiles["x"], y=tiles["y"]),
+            BagMetadata(
+                slide=Path(self.slide["path"]).stem, x=tiles["x"], y=tiles["y"]
+            ),
         )
 
 
