@@ -149,7 +149,13 @@ class GleasonModel[T_TrainBatch, T_PredictBatch](ABC, LightningModule):
         self.test_cm.update(logits, targets)
         self.test_metrics.update(logits, targets)
 
-        return {"loss": loss, "prob": prob, "pred": pred, **metadata}
+        return {
+            "loss": loss,
+            "prob": prob,
+            "pred": pred,
+            "targets": targets,
+            **metadata,
+        }
 
     def predict_step(
         self, batch: T_PredictBatch, batch_idx: int, dataloader_idx: int = 0
