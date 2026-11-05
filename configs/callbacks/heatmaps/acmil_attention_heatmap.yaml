@@ -1,0 +1,5 @@
+# @package callbacks.acmil_attention_heatmap
+
+_target_: ml.callbacks.ACMILAttentionHeatmapCallback
+save_artifact_path: "acmil_heatmaps"
+save_dir: null

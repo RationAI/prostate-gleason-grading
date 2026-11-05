@@ -1,0 +1,3 @@
+# @package callbacks.acmil_prediction_table
+
+_target_: ml.callbacks.acmil_prediction_table_callback.ACMILPredictionsTableCallback

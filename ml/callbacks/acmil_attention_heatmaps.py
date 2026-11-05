@@ -26,7 +26,7 @@ def min_max_normalize(tensor: torch.Tensor) -> torch.Tensor:
 class ACMILAttentionHeatmapCallback(MultiloaderLifecycle):
     def __init__(
         self,
-        save_artifact_path: str = "heatmaps",
+        save_artifact_path: str = "acmil_heatmaps",
         save_dir: str | None = None,
     ) -> None:
 
