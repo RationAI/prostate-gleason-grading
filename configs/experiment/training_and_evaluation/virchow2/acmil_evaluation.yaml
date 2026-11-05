@@ -1,0 +1,16 @@
+# @package _global_
+
+defaults:
+  - /experiment/training_and_evaluation/virchow2/data/SL: radboud
+  - /experiment/training_and_evaluation/virchow2/model/SL: acmil
+  - /callbacks/heatmaps/acmil_attention_heatmap
+  - /callbacks/acmil_prediction_table
+  - _self_
+
+mode: test
+
+checkpoint: ???
+
+metadata:
+  run_name: "ATTENTION HEATMAPS, PREDICTION TABLE: ${model_name} ${data.dataset.name}"
+  description: "ATTENTION HEATMAPS, PREDICTIONS TABLE: ${model_name} ${data.dataset.name}"
