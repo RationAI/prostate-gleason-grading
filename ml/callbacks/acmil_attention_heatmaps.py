@@ -140,7 +140,7 @@ class ACMILAttentionHeatmapCallback(MultiloaderLifecycle):
         mask = (mask * 255).clip(0, 255).astype(np.uint8)
 
         mask_vips = builder.resize_to_source(mask, kernel="nearest")
-        mask_name = f"{name}/{slide['stem']}.tiff"
+        mask_name = f"{name}/{Path(slide['path']).stem}.tiff"
         mppx, mppy = slide["mpp_x"], slide["mpp_y"]
 
         if self.save_dir is not None:
