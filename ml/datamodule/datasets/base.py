@@ -319,6 +319,7 @@ class FullyLabeledSlideDataset(LabeledSlideDataset[LabeledSample, FullyLabeledBa
         labels_map: dict[str, int],
         apply_carcinoma_prediction_filter: bool,
         carcinoma_prediction_threshold: float | None,
+        dominant_gp_percentage_threshold: float | None,
         qc_and_tissue_thresholds: dict[str, float],
         fold: int | None = None,
         invert_fold_selection: bool = False,
@@ -332,9 +333,22 @@ class FullyLabeledSlideDataset(LabeledSlideDataset[LabeledSample, FullyLabeledBa
                 "carcinoma prediction threshold must be specified."
             )
 
+        if (
+            carcinoma_prediction_threshold is not None
+            and dominant_gp_percentage_threshold is not None
+        ):
+            raise ValueError(
+                "Tile labels are generated either on the slide labels and "
+                "binary tile prediction, or GP tile percentages, not both."
+            )
+
+        self.dominant_gp_percentage_threshold = dominant_gp_percentage_threshold
         self.carcinoma_prediction_threshold = carcinoma_prediction_threshold
         self.apply_carcinoma_prediction_filter = apply_carcinoma_prediction_filter
+
         self._carcinoma_prediction_mask: np.ndarray | None = None
+        self._gp_mask: np.ndarray | None = None
+        self._gp_labels: np.ndarray | None = None
 
         super().__init__(
             labels_map=labels_map,
@@ -359,6 +373,11 @@ class FullyLabeledSlideDataset(LabeledSlideDataset[LabeledSample, FullyLabeledBa
         ):
             raise ValueError("Tiles are missing 'prediction' column.")
 
+        if self.dominant_gp_percentage_threshold is not None:
+            for col in ["gp3_percentage", "gp4_percentage", "gp5_percentage"]:
+                if col not in self.tiles.column_names:
+                    raise ValueError(f"Tiles are missing '{col}' column.")
+
     @override
     def _build_filter_mask(self) -> None:
 
@@ -369,6 +388,24 @@ class FullyLabeledSlideDataset(LabeledSlideDataset[LabeledSample, FullyLabeledBa
                 self.tiles.data.table["prediction"],
                 self.carcinoma_prediction_threshold,
             ).to_numpy(zero_copy_only=False)
+
+        if self.dominant_gp_percentage_threshold is not None:
+            table = self.tiles.data.table
+            gps = np.vstack(
+                [
+                    table["gp3_percentage"].to_numpy(zero_copy_only=False),
+                    table["gp4_percentage"].to_numpy(zero_copy_only=False),
+                    table["gp5_percentage"].to_numpy(zero_copy_only=False),
+                ]
+            )
+
+            dominant_gp = gps.argmax(axis=0)
+            dominant_gp_percentage = gps.max(axis=0)
+
+            self._gp_labels = dominant_gp + 1  # 0, 1, 2, 3 ~ negative, GP3, GP4, GP5
+            self._gp_mask = (
+                dominant_gp_percentage > self.dominant_gp_percentage_threshold
+            )
 
     @abstractmethod
     def _generate_tile_dataset(
@@ -387,7 +424,12 @@ class FullyLabeledSlideDataset(LabeledSlideDataset[LabeledSample, FullyLabeledBa
         indices = self._get_base_filtered_indices(slide)
         slide_label = self._get_slide_label(slide)
 
-        if slide["carcinoma"] and self._carcinoma_prediction_mask is not None:
+        if slide["carcinoma"] and self.dominant_gp_percentage_threshold is not None:
+            assert self._gp_mask is not None and self._gp_labels is not None
+            indices = indices[self._gp_mask[indices]]
+            tile_labels = torch.from_numpy(self._gp_labels[indices]).long()
+
+        elif slide["carcinoma"] and self._carcinoma_prediction_mask is not None:
             binary_labels = self._carcinoma_prediction_mask[indices]
 
             if self.apply_carcinoma_prediction_filter:
