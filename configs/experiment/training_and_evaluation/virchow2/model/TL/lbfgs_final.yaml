@@ -5,6 +5,11 @@ defaults:
   - /callbacks/checkpointing
   - _self_
 
+callbacks:
+  checkpointing:
+    monitor: null
+    save_top_k: 0
+
 datamodule:
   drop_last: false
   shuffle: false
