@@ -1,0 +1,30 @@
+# @package _global_
+
+defaults:
+  - /model/virchow2_lbfgs@model
+  - /callbacks/checkpointing
+  - _self_
+
+datamodule:
+  drop_last: false
+  shuffle: false
+  sampler: null
+
+trainer:
+  enable_checkpointing: True
+  enable_progress_bar: True
+  enable_model_summary: True
+  deterministic: true
+  use_distributed_sampler: False
+  devices: 1
+  num_nodes: 1
+  limit_train_batches: 1.0
+  overfit_batches: 0.0
+  min_epochs: 1
+  limit_val_batches: 0
+  num_sanity_val_steps: 0
+
+model_name: "Virchow2-LBFGS"
+hparams: "WD=${model.weight_decay}"
+model:
+  weight_decay: ???

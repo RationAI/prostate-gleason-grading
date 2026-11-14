@@ -68,7 +68,9 @@ class SamplesDataModule(LightningDataModule):
             persistent_workers=self.num_workers > 0,
         )
 
-    def val_dataloader(self) -> Iterable[LabeledSampleBatch]:
+    def val_dataloader(self) -> Iterable[LabeledSampleBatch] | None:
+        if self.val is None:
+            return None
         return DataLoader(
             self.val,
             batch_size=self.batch_size,
