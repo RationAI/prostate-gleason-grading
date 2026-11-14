@@ -12,4 +12,4 @@ dataset:
     gp_masks: "mlflow-artifacts:/73/e1691d9e7b864143972f3f938de979cc/artifacts/Radboud 224 Train"
     embeddings:
       virchow2: "mlflow-artifacts:/73/9013e0219db04fda8c06c8e524922b10/artifacts/Radboud 224 Train"
-      virchow2_with_gp: ???
+      virchow2_with_gp: "mlflow-artifacts:/73/0ed1a38313dd4db7bf65f7e10554ccec/artifacts/Radboud 224 Train"
