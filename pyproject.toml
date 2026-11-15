@@ -16,6 +16,7 @@ dependencies = [
     "mlflow>=3.10.1",
     "rationai-mlkit>=0.4.1",
     "rationai-masks",
+    "deprecated>=3.0.1",
 ]
 
 [project.optional-dependencies]
