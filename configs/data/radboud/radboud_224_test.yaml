@@ -12,4 +12,4 @@ dataset:
     gp_masks: "mlflow-artifacts:/73/8a8e103d656a4fccbe7a1931b4c33f14/artifacts/Radboud 224 Test"
     embeddings:
       virchow2: "mlflow-artifacts:/73/39288bd4e4ec46bd87d02dabc1b9ecd7/artifacts/Radboud 224 Test"
-      virchow2_with_gp: ???
+      virchow2_with_gp: "mlflow-artifacts:/73/a29746910ebd4bed9c588cdf5ff955b8/artifacts/Radboud 224 Test"
