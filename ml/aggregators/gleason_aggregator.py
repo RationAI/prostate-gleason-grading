@@ -4,7 +4,7 @@ import torch
 from rationai.masks import HeatmapAssembler
 from torch import Tensor, nn
 
-from ml.aggregators.binary_aggregators import BinaryAggregator
+from ml.aggregators.binary_aggregator import BinaryAggregator
 from ml.datamodule.datasets.base import Slide
 
 
