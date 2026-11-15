@@ -10,7 +10,7 @@ from torchmetrics import MetricCollection
 from torchmetrics.classification import MulticlassConfusionMatrix
 
 from ml.aggregators import BinaryAggregator, GleasonScoreAggregator
-from ml.base import metrics
+from ml.modeling.base import metrics
 
 
 if TYPE_CHECKING:

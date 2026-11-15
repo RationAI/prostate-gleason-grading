@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from rationai.mlkit.metrics.aggregators import MeanPoolMaxAggregator, TopKAggregator
 from torch import Tensor
 
-from ml.data_module.datasets.base import Slide
+from ml.datamodule.datasets.base import Slide
 
 
 class BinaryAggregator(ABC):

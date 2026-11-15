@@ -5,7 +5,7 @@ from rationai.masks import HeatmapAssembler
 from torch import Tensor, nn
 
 from ml.aggregators.binary_aggregators import BinaryAggregator
-from ml.data_module.datasets.base import Slide
+from ml.datamodule.datasets.base import Slide
 
 
 class GleasonScoreAggregator:
