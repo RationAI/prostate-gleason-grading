@@ -1,5 +1,6 @@
 from ml.callbacks.acmil_attention_heatmaps import ACMILAttentionHeatmapCallback
 from ml.callbacks.acmil_prediction_table_callback import ACMILPredictionsTableCallback
+from ml.callbacks.aggregation_callback import AggregationCallback
 from ml.callbacks.attention_heatmap_callback import AttentionHeatmapCallback
 from ml.callbacks.heatmaps_callback import (
     ClassificationMaskCallback,
@@ -12,6 +13,7 @@ from ml.callbacks.prediction_table_callback import PredictionTableCallback
 __all__ = [
     "ACMILAttentionHeatmapCallback",
     "ACMILPredictionsTableCallback",
+    "AggregationCallback",
     "AttentionHeatmapCallback",
     "ClassificationMaskCallback",
     "ConditionalProbabilityHeatmapCallback",
