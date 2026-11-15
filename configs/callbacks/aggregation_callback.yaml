@@ -1,0 +1,4 @@
+# @package callbacks.aggregation
+
+_target_: ml.callbacks.aggregation_callback
+aggregators: ???

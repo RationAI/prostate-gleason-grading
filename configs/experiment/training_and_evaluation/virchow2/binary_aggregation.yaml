@@ -1,0 +1,40 @@
+# @package _global_
+
+defaults:
+  - /experiment/training_and_evaluation/virchow2/data/TL: ???
+  - /experiment/training_and_evaluation/virchow2/model/TL: ???
+  - /callbacks/aggregation_callback
+  - /callbacks/aggregators/binary/max@callbacks.aggregation.aggregators.max
+  - /callbacks/aggregators/binary/mean_pool_max@callbacks.aggregation.aggregators.mean_pool_max_2
+  - /callbacks/aggregators/binary/mean_pool_max@callbacks.aggregation.aggregators.mean_pool_max_3
+  - /callbacks/aggregators/binary/mean_pool_max@callbacks.aggregation.aggregators.mean_pool_max_4
+  - /callbacks/aggregators/binary/mean_pool_max@callbacks.aggregation.aggregators.mean_pool_max_5
+  - _self_
+
+callbacks:
+  aggregation:
+    aggregators:
+      max:
+        prediction_threshold: ${prediction_threshold}
+      mean_pool_max_2:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 2
+      mean_pool_max_3:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 3
+      mean_pool_max_4:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 4
+      mean_pool_max_5:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 5
+
+prediction_threshold: 0
+
+mode: test
+
+checkpoint: ???
+
+metadata:
+  run_name: "BINARY MAX AGGREGATION: ${model_name} ${data.dataset.name}"
+  description: "BINARY MAX AGGREGATION: ${model_name} ${data.dataset.name}"

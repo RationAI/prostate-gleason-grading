@@ -1,0 +1,4 @@
+_target_: ml.aggregators.MeanPoolTopKBinaryAggregator
+prediction_threshold: ???
+kernel_size: ???
+k: ???

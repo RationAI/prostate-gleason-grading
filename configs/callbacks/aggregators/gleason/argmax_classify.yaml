@@ -1,0 +1,9 @@
+defaults:
+  - binary/aggregators@binary_aggregator: ???
+  - datamodule/labels_map@labels_map: ???
+  - _self_
+
+_target_: ml.aggregators.ArgmaxClassifyGleasonScoreAggregator
+noise_eps: 0.005
+clinical_eps: 0.05
+kernel_size: ???

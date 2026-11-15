@@ -1,0 +1,3 @@
+_target_: ml.aggregators.MeanPoolMaxBinaryAggregator
+prediction_threshold: ???
+kernel_size: ???
