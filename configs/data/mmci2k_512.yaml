@@ -8,6 +8,7 @@ dataset:
     blur_percentage: 0.25
     folding_percentage: 0.25
   carcinoma_prediction_threshold: ???
+  dominant_gp_percentage_threshold: null
   mlflow_uris:
     tiling: "mlflow-artifacts:/105/2ca03a6766354ce4b5209c5ac1712afd/artifacts/MMCI 2k 512"
     tiling_with_gs: "mlflow-artifacts:/105/d4e547a1bc454ad2a115d2b6bec64c0f/artifacts/MMCI 2k 512"

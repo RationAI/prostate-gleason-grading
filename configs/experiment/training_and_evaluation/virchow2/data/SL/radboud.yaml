@@ -11,8 +11,6 @@ defaults:
 
 data_info: ""
 
-validation_fold: null
-
 datamodule:
   batch_size: 4
   num_workers: 8

@@ -7,6 +7,8 @@ dataset:
     residual_percentage: 0.25
     blur_percentage: 0.25
     folding_percentage: 0.25
+  carcinoma_prediction_threshold: null
+  dominant_gp_percentage_threshold: 0.7
   mlflow_uris:
     tiling: ???
     tiling_with_gs: ???

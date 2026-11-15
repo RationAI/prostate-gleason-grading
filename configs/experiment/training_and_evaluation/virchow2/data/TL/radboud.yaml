@@ -1,0 +1,41 @@
+# @package _global_
+
+defaults:
+  - /data/radboud/base@data
+  - /data/radboud/radboud_224_train@train_data
+  - /data/radboud/radboud_224_val@val_data
+  - /data/radboud/radboud_224_test@test_data
+  - /datamodule/embedding_samples_datamodule@datamodule
+  - /datamodule/labels_maps/gs
+  - _self_
+
+data_info: ""
+
+datamodule:
+  batch_size: 1024
+  num_workers: 8
+  train:
+    uris: ["${train_data.dataset.mlflow_uris.embeddings.virchow2_with_gp}"]
+    paths: null
+    embeddings_col: embedding
+    fold: null
+    invert_fold_selection: False
+    apply_carcinoma_prediction_filter: False
+  val:
+    uris: ["${val_data.dataset.mlflow_uris.embeddings.virchow2}"]
+    paths: null
+    embeddings_col: embedding
+    fold: null
+    invert_fold_selection: False
+  test:
+    uris: ["${test_data.dataset.mlflow_uris.embeddings.virchow2}"]
+    paths: null
+    embeddings_col: embedding
+    fold: null
+    invert_fold_selection: False
+  predict:
+    uris: ["${test_data.dataset.mlflow_uris.embeddings.virchow2}"]
+    paths: null
+    embeddings_col: embedding
+    fold: null
+    invert_fold_selection: False

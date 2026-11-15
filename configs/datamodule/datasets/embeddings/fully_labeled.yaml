@@ -5,6 +5,7 @@ embeddings_col: ???
 fold: ???
 invert_fold_selection: ???
 qc_and_tissue_thresholds: ${data.dataset.thresholds}
+dominant_gp_percentage_threshold: ${data.dataset.dominant_gp_percentage_threshold}
 carcinoma_prediction_threshold: ${data.dataset.carcinoma_prediction_threshold}
 apply_carcinoma_prediction_filter: ???
 labels_map: ${labels_map}
