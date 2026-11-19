@@ -1,9 +1,9 @@
 from typing import Any
 
-import torch
 from torch import Tensor, nn
 from torch.optim import AdamW, Optimizer
 
+from ml.modeling.attention_normalization import AttentionNormalization, Softmax
 from ml.modeling.base import SLGleasonModel
 from ml.modeling.decode_head import Classifier
 from ml.typing import UnlabeledBagBatch, WeaklyLabeledBagBatch
@@ -18,6 +18,7 @@ class EmbeddingAttentionBasedMILGleasonModel(SLGleasonModel):
         adamw_kwargs: dict[str, Any],
         attention_dim: int = 512,
         weight_decay: float = 0.0,
+        attention_normalization: AttentionNormalization | None = None,
     ) -> None:
 
         super().__init__(num_classes)
@@ -33,6 +34,12 @@ class EmbeddingAttentionBasedMILGleasonModel(SLGleasonModel):
         self.attention_U = nn.Sequential(nn.Linear(in_dim, attention_dim), nn.Sigmoid())
         self.attention_W = nn.Linear(attention_dim, 1, bias=False)
 
+        self.attention_normalization = (
+            attention_normalization
+            if attention_normalization is not None
+            else Softmax()
+        )
+
     def attention(self, x: Tensor, mask: Tensor) -> Tensor:
 
         # B ~ batch size, N ~ number of tiles, D ~ embeddings dim
@@ -43,8 +50,7 @@ class EmbeddingAttentionBasedMILGleasonModel(SLGleasonModel):
         v = self.attention_V(x)  # [B, N, A]
         u = self.attention_U(x)  # [B, N, A]
         w = self.attention_W(v * u).squeeze(-1)  # [B, N]
-        w = w.masked_fill(~mask, float("-inf"))  # [B, N], -inf for padding tiles
-        return torch.softmax(w, dim=1)  # [B, N], 0 for padding tiles
+        return self.attention_normalization(w, mask)  # [B, N], 0 for padding tiles
 
     def forward(self, x: Tensor, mask: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         attention = self.attention(x, mask)  # [B, N]

@@ -3,7 +3,6 @@ from kube_jobs import submit_job
 
 submit_job(
     job_name="prostate-gleason-train-virchow2-abmil",
-    username=...,
     image="cerit.io/rationai/base:2.0.6",
     cpu=10,
     gpu=...,
@@ -18,7 +17,11 @@ submit_job(
            experiment=/training_and_evaluation/virchow2/train \
            experiment/training_and_evaluation/virchow2/data=SL/mmci2k \
            experiment/training_and_evaluation/virchow2/model=SL/abmil \
-           validation_fold=... model.weight_decay=... model.lr=... model.attention_dim=... \
+           validation_fold=... \
+           model.weight_decay=... \
+           model.lr=... \
+           model.attention_dim=... \
+           model/attention_normalization=... \
         """,
     ],
 )

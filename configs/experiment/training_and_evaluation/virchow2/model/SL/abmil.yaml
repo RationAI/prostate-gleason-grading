@@ -14,7 +14,7 @@ trainer:
   val_check_interval: 0.2
 
 model_name: "Virchow2-ABMIL"
-hparams: "WD=${model.weight_decay} LR=${model.lr} AD=${model.attention_dim}"
+hparams: "WD=${model.weight_decay} LR=${model.lr} AD=${model.attention_dim} AN=${hydra:runtime.choices.model/attention_normalization}"
 model:
   lr: ???
   weight_decay: ???

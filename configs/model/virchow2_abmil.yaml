@@ -1,5 +1,6 @@
 defaults:
   - decode_head@classifier: classifier
+  - attention_normalization@attention_normalization: ???
   - _self_
 
 _target_: ml.modeling.EmbeddingAttentionBasedMILGleasonModel
