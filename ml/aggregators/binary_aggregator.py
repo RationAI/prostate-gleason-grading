@@ -16,7 +16,7 @@ class BinaryAggregator(ABC):
         x: Tensor,
         y: Tensor,
         slide: Slide,
-    ) -> float:
+    ) -> float | None:
         return self.aggregate(1 - probs[:, 0], x, y, slide)
 
     def is_carcinoma(
@@ -25,8 +25,9 @@ class BinaryAggregator(ABC):
         x: Tensor,
         y: Tensor,
         slide: Slide,
-    ) -> bool:
-        return self(probs, x, y, slide) > self.prediction_threshold
+    ) -> bool | None:
+        score = self(probs, x, y, slide)
+        return None if score is None else score > self.prediction_threshold
 
     @abstractmethod
     def aggregate(
@@ -35,7 +36,7 @@ class BinaryAggregator(ABC):
         x: Tensor,
         y: Tensor,
         slide: Slide,
-    ) -> float:
+    ) -> float | None:
         pass
 
 
@@ -64,13 +65,20 @@ class MeanPoolMaxBinaryAggregator(BinaryAggregator):
         x: Tensor,
         y: Tensor,
         slide: Slide,
-    ) -> float:
+    ) -> float | None:
         aggr = MeanPoolMaxAggregator(
             self.kernel_size, slide["tile_extent_x"], slide["stride_x"]
         )
 
         aggr.update(carcinoma_prob, carcinoma_prob, x=x, y=y)
-        return aggr.compute()[0].item()
+        try:
+            return aggr.compute()[0].item()
+        except RuntimeError as exc:
+            if "Output size is too small" in str(exc):
+                print(f"[WARN] {slide['stem']} to small; returning None.")
+                return None
+            else:
+                raise
 
 
 class MeanPoolTopKBinaryAggregator(BinaryAggregator):
@@ -85,10 +93,17 @@ class MeanPoolTopKBinaryAggregator(BinaryAggregator):
         x: Tensor,
         y: Tensor,
         slide: Slide,
-    ) -> float:
+    ) -> float | None:
         aggr = TopKAggregator(
             self.kernel_size, slide["tile_extent_x"], slide["stride_x"], self.k
         )
 
         aggr.update(carcinoma_prob, carcinoma_prob, x=x, y=y)
-        return aggr.compute()[0].item()
+        try:
+            return aggr.compute()[0].item()
+        except RuntimeError as exc:
+            if "Output size is too small" in str(exc):
+                print(f"[WARN] {slide['stem']} to small; returning None.")
+                return None
+            else:
+                raise
