@@ -9,6 +9,26 @@ defaults:
   - /callbacks/aggregators/binary/mean_pool_max@callbacks.aggregation.aggregators.mean_pool_max_3
   - /callbacks/aggregators/binary/mean_pool_max@callbacks.aggregation.aggregators.mean_pool_max_4
   - /callbacks/aggregators/binary/mean_pool_max@callbacks.aggregation.aggregators.mean_pool_max_5
+  - /callbacks/aggregators/binary/mean_pool_max@callbacks.aggregation.aggregators.mean_pool_max_6
+  - /callbacks/aggregators/binary/mean_pool_max@callbacks.aggregation.aggregators.mean_pool_max_7
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_3_top_2
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_3_top_3
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_3_top_5
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_3_top_7
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_3_top_10
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_3_top_15
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_4_top_2
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_4_top_3
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_4_top_5
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_4_top_7
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_4_top_10
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_4_top_15
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_5_top_2
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_5_top_3
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_5_top_5
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_5_top_7
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_5_top_10
+  - /callbacks/aggregators/binary/mean_pool_top_k@callbacks.aggregation.aggregators.mean_pool_5_top_15
   - _self_
 
 callbacks:
@@ -28,6 +48,84 @@ callbacks:
       mean_pool_max_5:
         prediction_threshold: ${prediction_threshold}
         kernel_size: 5
+      mean_pool_max_6:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 6
+      mean_pool_max_7:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 7
+      mean_pool_3_top_2:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 3
+        k: 2
+      mean_pool_3_top_3:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 3
+        k: 3
+      mean_pool_3_top_5:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 3
+        k: 5
+      mean_pool_3_top_7:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 3
+        k: 7
+      mean_pool_3_top_10:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 3
+        k: 10
+      mean_pool_3_top_15:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 3
+        k: 15
+      mean_pool_4_top_2:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 4
+        k: 2
+      mean_pool_4_top_3:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 4
+        k: 3
+      mean_pool_4_top_5:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 4
+        k: 5
+      mean_pool_4_top_7:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 4
+        k: 7
+      mean_pool_4_top_10:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 4
+        k: 10
+      mean_pool_4_top_15:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 4
+        k: 15
+      mean_pool_5_top_2:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 5
+        k: 2
+      mean_pool_5_top_3:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 5
+        k: 3
+      mean_pool_5_top_5:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 5
+        k: 5
+      mean_pool_5_top_7:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 5
+        k: 7
+      mean_pool_5_top_10:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 5
+        k: 10
+      mean_pool_5_top_15:
+        prediction_threshold: ${prediction_threshold}
+        kernel_size: 5
+        k: 15
 
 prediction_threshold: 0
 
@@ -36,5 +134,5 @@ mode: test
 checkpoint: ???
 
 metadata:
-  run_name: "BINARY MAX AGGREGATION: ${model_name} ${data.dataset.name}"
-  description: "BINARY MAX AGGREGATION: ${model_name} ${data.dataset.name}"
+  run_name: "BINARY AGGREGATION: ${model_name} ${data.dataset.name}"
+  description: "BINARY AGGREGATION: ${model_name} ${data.dataset.name}"
