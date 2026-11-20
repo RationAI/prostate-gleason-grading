@@ -103,16 +103,16 @@ class AttentionHeatmapCallback(MultiloaderLifecycle):
 
             self._create_mask(slide, "attention", attention, coords)
 
-            tile_logits = outputs["tile_logits"][i]
-            tile_logits = tile_logits[: coords.shape[0]]  # remove padding
+            # tile_logits = outputs["tile_logits"][i]
+            # tile_logits = tile_logits[: coords.shape[0]]  # remove padding
 
-            num_classes = tile_logits.shape[1]
+            # num_classes = tile_logits.shape[1]
 
-            tile_probs = torch.softmax(tile_logits, dim=-1)
+            # tile_probs = torch.softmax(tile_logits, dim=-1)
 
-            for cls in range(num_classes):
-                class_probs = tile_probs[:, cls].detach().unsqueeze(-1).cpu().numpy()
-                self._create_mask(slide, f"class_{cls}", class_probs, coords)
+            # for cls in range(num_classes):
+            #    class_probs = tile_probs[:, cls].detach().unsqueeze(-1).cpu().numpy()
+            #    self._create_mask(slide, f"class_{cls}", class_probs, coords)
 
     def _create_mask(
         self,
