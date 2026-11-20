@@ -41,7 +41,7 @@ class AttentionHeatmapCallback(MultiloaderLifecycle):
     def _on_stage_start(self, trainer: Trainer, stage: str) -> None:
         datamodule: BagsDataModule[Any, Any] = cast("Any", trainer).datamodule
         dataset: BagOfTilesDataset[Any] = getattr(datamodule, stage)
-        self._slides = {bag.slide["stem"]: bag.slide for bag in dataset.bags}
+        self._slides = {Path(bag.slide["path"]).stem: bag.slide for bag in dataset.bags}
         self._logger = cast("MLFlowLogger", trainer.logger)
 
     def on_predict_start(
@@ -138,7 +138,7 @@ class AttentionHeatmapCallback(MultiloaderLifecycle):
         mask = (mask * 255).clip(0, 255).astype(np.uint8)
 
         mask_vips = builder.resize_to_source(mask, kernel="nearest")
-        mask_name = f"{name}/{slide['stem']}.tiff"
+        mask_name = f"{name}/{Path(slide['path']).stem}.tiff"
         mppx, mppy = slide["mpp_x"], slide["mpp_y"]
 
         if self.save_dir is not None:
