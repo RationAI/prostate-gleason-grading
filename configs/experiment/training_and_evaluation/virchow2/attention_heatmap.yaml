@@ -6,12 +6,13 @@ defaults:
   - /callbacks/heatmaps/attention_heatmap
   - _self_
 
-mode: predict
+mode: test
 
 checkpoint: ???
 
 model_name: ???
+hparams: ???
 
 metadata:
-  run_name: "ATTENTION HEATMAPS: ${model_name} ${data.dataset.name}"
-  description: "ATTENTION HEATMAPS: ${model_name} ${data.dataset.name}"
+  run_name: "ATTENTION HEATMAPS: ${model_name} ${hparams} ${data.dataset.name}"
+  description: "ATTENTION HEATMAPS: ${model_name} ${hparams} ${data.dataset.name}"
