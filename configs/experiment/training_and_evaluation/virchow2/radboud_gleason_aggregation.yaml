@@ -1,0 +1,36 @@
+# @package _global_
+
+defaults:
+  - /experiment/training_and_evaluation/virchow2/data/TL: radboud
+  - /experiment/training_and_evaluation/virchow2/model/TL: lbfgs_final
+  - /callbacks/aggregation_callback
+  - /callbacks/aggregators/binary/mean_pool_max@callbacks.aggregation.aggregators.binary
+  - /callbacks/aggregators/gleason/argmax_classify@callbacks.aggregation.aggregators.argmax_classify
+  - /callbacks/aggregators/gleason/pattern_sum@callbacks.aggregation.aggregators.pattern_sum
+  - /callbacks/aggregators/gleason/tumor_weighted_pattern_sum@callbacks.aggregation.aggregators.tumor_weighted_pattern_sum
+  - _self_
+
+callbacks:
+  aggregation:
+    aggregators:
+      binary:
+        prediction_threshold: 0.979
+        kernel_size: 2
+      argmax_classify:
+        kernel_size: 2
+      pattern_sum:
+        kernel_size: 2
+      tumor_weighted_pattern_sum:
+        kernel_size: 2
+
+mode: test
+
+checkpoint: "mlflow-artifacts:/73/c9c86f1ed6844cf791c2e6b6eaf74ece/artifacts/checkpoints/last/checkpoint.ckpt"
+
+model:
+  weight_decay: 0.0
+  num_classes: 4
+
+metadata:
+  run_name: "GLEASON AGGREGATION: ${model_name} ${data.dataset.name}"
+  description: "GLEASON AGGREGATION: ${model_name} ${data.dataset.name}"
