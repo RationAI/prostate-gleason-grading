@@ -14,7 +14,7 @@ trainer:
   val_check_interval: 0.2
 
 model_name: "Virchow2-ACMIL"
-hparams: "WD=${model.weight_decay} LR=${model.lr} AD=${model.attention_dim} MLPD=${model.mlp_hidden_dim} LB=${model.loss_b_weight} LP=${model.loss_p_weight} LD=${model.loss_d_weight} K=${model.stkim_k} P=${model.stkim_p}"
+hparams: "WD=${model.weight_decay} LR=${model.lr} AD=${model.attention_dim} MLPD=${model.mlp_hidden_dim} LB=${model.loss_b_weight} LP=${model.loss_p_weight} LD=${model.loss_d_weight} K=${model.stkim_k} P=${model.stkim_p} AN=${hydra:runtime.choices.model/attention_normalization}"
 model:
   lr: ???
   weight_decay: ???

@@ -1,3 +1,7 @@
+defaults:
+  - attention_normalization@attention_normalization: ???
+  - _self_
+
 _target_: ml.modeling.EmbeddingAttentionChallengingMILGleasonModel
 num_classes: 10
 embedding_dim: 2560

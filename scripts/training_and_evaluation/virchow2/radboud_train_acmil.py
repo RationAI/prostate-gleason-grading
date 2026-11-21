@@ -21,6 +21,7 @@ submit_job(
            model.weight_decay=... model.lr=... model.attention_dim=... \
            model.mlp_hidden_dim=... model.stkim_k=.. model.stkim_p=... \
            model.loss_p_weight=... model.loss_d_weight=... model.loss_b_weight=... \
+           model/attention_normalization=... \
         """,
     ],
 )

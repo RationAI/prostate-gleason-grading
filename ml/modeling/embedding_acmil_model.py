@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.optim import AdamW, Optimizer
 
+from ml.modeling.attention_normalization import AttentionNormalization, Softmax
 from ml.modeling.base import SLGleasonModel
 from ml.typing import UnlabeledBagBatch, WeaklyLabeledBagBatch
 
@@ -35,6 +36,7 @@ class STKIMAttentionBranch(nn.Module):
         mlp_dims: list[int],
         stkim_k: int,
         stkim_p: float,
+        attention_normalization: AttentionNormalization,
     ) -> None:
 
         super().__init__()
@@ -45,6 +47,8 @@ class STKIMAttentionBranch(nn.Module):
         self.v = nn.Sequential(nn.Linear(embedding_dim, attention_dim), nn.Tanh())
         self.u = nn.Sequential(nn.Linear(embedding_dim, attention_dim), nn.Sigmoid())
         self.w = nn.Linear(attention_dim, 1, bias=False)
+
+        self.attention_normalization = attention_normalization
 
         self.mlp = MLP([embedding_dim, *mlp_dims, 1])
 
@@ -58,8 +62,7 @@ class STKIMAttentionBranch(nn.Module):
         v = self.v(x)  # [B, N, A]
         u = self.u(x)  # [B, N, A]
         w = self.w(v * u).squeeze(-1)  # [B, N]
-        w = w.masked_fill(~mask, float("-inf"))  # [B, N], -inf for padding tiles
-        a = torch.softmax(w, dim=1)  # [B, N], 0 for padding tiles
+        a = self.attention_normalization(w, mask)  # [B, N]
 
         if self.training and self.stkim_k > 0 and self.stkim_p > 0:
             k, p = min(self.stkim_k, a.shape[1]), self.stkim_p
@@ -98,6 +101,7 @@ class EmbeddingAttentionChallengingMILGleasonModel(SLGleasonModel):
         loss_d_weight: float = 1.0,
         loss_b_weight: float = 1.0,
         weight_decay: float = 0.0,
+        attention_normalization: AttentionNormalization | None = None,
     ) -> None:
 
         super().__init__(num_classes)
@@ -112,6 +116,12 @@ class EmbeddingAttentionChallengingMILGleasonModel(SLGleasonModel):
 
         self.mlp = MLP([embedding_dim, *mlp_hidden_dim, num_classes])
 
+        self.attention_normalization = (
+            attention_normalization
+            if attention_normalization is not None
+            else Softmax()
+        )
+
         self.attention_branches = nn.ModuleList(
             [
                 STKIMAttentionBranch(
@@ -120,6 +130,7 @@ class EmbeddingAttentionChallengingMILGleasonModel(SLGleasonModel):
                     mlp_hidden_dim,
                     stkim_k,
                     stkim_p,
+                    self.attention_normalization,
                 )
                 for _ in range(3)  # one per Gleason pattern (3, 4, 5)
             ]
