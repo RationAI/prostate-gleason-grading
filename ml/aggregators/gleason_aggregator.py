@@ -72,7 +72,7 @@ class GleasonScoreAggregator:
     ) -> tuple[Tensor, str]:
 
         if not self.binary_aggregator.is_carcinoma(probs, x, y, slide):
-            return torch.tensor(0, dtype=torch.long), "None"
+            return torch.tensor([0], dtype=torch.long), "None"
 
         gp_percentages = self.pattern_percentages(probs, x, y, slide)
 
@@ -85,7 +85,7 @@ class GleasonScoreAggregator:
         present_patterns = torch.where(gp_percentages > self.noise_eps)[0]
         if len(present_patterns) == 0:
             print(f"Slide {slide['stem']} marked as carcinoma, but contains no GP.")
-            return torch.tensor(0, dtype=torch.long), "None"
+            return torch.tensor([0], dtype=torch.long), "None"
 
         predominant_pattern = int(gp_percentages.argmax().item())
 
@@ -109,7 +109,7 @@ class GleasonScoreAggregator:
 
         gleason_score = f"{primary_pattern}+{secondary_pattern}"
         return torch.tensor(
-            self.labels_map[gleason_score], dtype=torch.long
+            [self.labels_map[gleason_score]], dtype=torch.long
         ), gleason_score
 
 
