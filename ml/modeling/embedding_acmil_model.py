@@ -121,7 +121,7 @@ class EmbeddingAttentionChallengingMILGleasonModel(SLGleasonModel):
                     stkim_k,
                     stkim_p,
                 )
-                for _ in range(4)  # one per gleason pattern (negative, 3, 4, 5)
+                for _ in range(3)  # one per Gleason pattern (3, 4, 5)
             ]
         )
 
@@ -185,11 +185,11 @@ class EmbeddingAttentionChallengingMILGleasonModel(SLGleasonModel):
 
         loss = torch.tensor(0, device=targets.device, dtype=torch.float32)
 
-        for i, preds in enumerate(branch_preds[1:]):  # ignore negative branch
+        for i, preds in enumerate(branch_preds):
             labels = targets[:, i]
             loss += F.binary_cross_entropy(preds, labels)
 
-        return loss / (len(branch_preds) - 1)
+        return loss / len(branch_preds)
 
     def loss_d(self, branch_attentions: list[Tensor]) -> Tensor:
 

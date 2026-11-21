@@ -14,7 +14,7 @@ class ACMILPredictionsTableCallback(MultiloaderLifecycle):
         super().__init__()
 
         self.table_path = table_path
-        self.branch_names = ["Negative", "GP3", "GP4", "GP5"]
+        self.branch_names = ["GP3", "GP4", "GP5"]
 
         self._logger: MLFlowLogger
         self._labels_map: dict[int, str]

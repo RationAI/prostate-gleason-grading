@@ -38,7 +38,7 @@ class ACMILAttentionHeatmapCallback(MultiloaderLifecycle):
         self._slides: dict[str, dict[str, Any]]
         self._logger: MLFlowLogger
 
-        self.branch_names = ["negative", "pattern_3", "pattern_4", "pattern_5"]
+        self.branch_names = ["pattern_3", "pattern_4", "pattern_5"]
 
     def _on_stage_start(self, trainer: Trainer, stage: str) -> None:
         datamodule: BagsDataModule[Any, Any] = cast("Any", trainer).datamodule
