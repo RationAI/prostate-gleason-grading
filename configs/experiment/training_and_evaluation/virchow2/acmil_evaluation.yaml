@@ -11,6 +11,9 @@ mode: test
 
 checkpoint: ???
 
+model_name: ???
+hparams: ???
+
 metadata:
-  run_name: "ATTENTION HEATMAPS, PREDICTION TABLE: ${model_name} ${data.dataset.name}"
-  description: "ATTENTION HEATMAPS, PREDICTIONS TABLE: ${model_name} ${data.dataset.name}"
+  run_name: "ATTENTION HEATMAPS, PREDICTION TABLE: ${model_name} ${hparams} ${data.dataset.name}"
+  description: "ATTENTION HEATMAPS, PREDICTIONS TABLE: ${model_name} ${hparams} ${data.dataset.name}"
