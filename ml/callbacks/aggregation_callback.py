@@ -82,7 +82,7 @@ class AggregationCallback(MultiloaderLifecycle):
             "label": ds.slide["gleason_score"],
         }
 
-        label = ds.slide_label.to(pl_module.device)
+        label = ds.slide_label.to(pl_module.device).view(-1)
 
         for name, aggr in self.aggregators.items():
             if isinstance(aggr, BinaryAggregator):
