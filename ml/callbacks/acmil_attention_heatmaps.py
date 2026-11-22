@@ -28,6 +28,7 @@ class ACMILAttentionHeatmapCallback(MultiloaderLifecycle):
         self,
         save_artifact_path: str = "acmil_heatmaps",
         save_dir: str | None = None,
+        scale_attention_by_pred: bool = False,
     ) -> None:
 
         super().__init__()
@@ -37,6 +38,8 @@ class ACMILAttentionHeatmapCallback(MultiloaderLifecycle):
 
         self._slides: dict[str, dict[str, Any]]
         self._logger: MLFlowLogger
+
+        self.scale_attention_by_pred = scale_attention_by_pred
 
         self.branch_names = ["pattern_3", "pattern_4", "pattern_5"]
 
@@ -109,11 +112,13 @@ class ACMILAttentionHeatmapCallback(MultiloaderLifecycle):
                 b_attn = branch_attentions[branch_idx][i][: coords.shape[0]]
                 b_attn = min_max_normalize(b_attn)
 
-                scaled_attention = b_attn * b_pred
-                scaled_attention = scaled_attention.detach().unsqueeze(-1).cpu().numpy()
+                if self.scale_attention_by_pred:
+                    b_attn *= b_pred
+
+                b_attn = b_attn.detach().unsqueeze(-1).cpu()
 
                 self._create_mask(
-                    slide, f"{branch_name}_attention", scaled_attention, coords
+                    slide, f"{branch_name}_attention", b_attn.numpy(), coords
                 )
 
     def _create_mask(
