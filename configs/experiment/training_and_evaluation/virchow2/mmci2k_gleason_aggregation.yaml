@@ -8,7 +8,7 @@ defaults:
   - /callbacks/aggregators/gleason/argmax_classify@callbacks.aggregation.aggregators.argmax_classify
   - /callbacks/aggregators/gleason/pattern_sum@callbacks.aggregation.aggregators.pattern_sum
   - /callbacks/aggregators/gleason/tumor_weighted_pattern_sum@callbacks.aggregation.aggregators.tumor_weighted_pattern_sum
-  - override /datamodule/labels_maps: gs
+  - override /datamodule/labels_maps: binary
   - _self_
 
 callbacks:

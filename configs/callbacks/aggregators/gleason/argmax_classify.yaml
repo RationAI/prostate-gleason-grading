@@ -1,6 +1,6 @@
 _target_: ml.aggregators.ArgmaxClassifyGleasonScoreAggregator
 binary_aggregator: ${callbacks.aggregation.aggregators.binary}
-labels_map: ${labels_map}
+labels_map: ${callbacks.aggregation.slide_labels_map}
 noise_eps: 0.005
 clinical_eps: 0.05
 kernel_size: ???

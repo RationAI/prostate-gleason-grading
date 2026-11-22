@@ -23,12 +23,14 @@ class AggregationCallback(MultiloaderLifecycle):
     def __init__(
         self,
         aggregators: dict[str, GleasonScoreAggregator | BinaryAggregator],
+        slide_labels_map: dict[str, int],
         table_path: str = "SL_prediction_table",
     ) -> None:
 
         super().__init__()
 
         self.aggregators = aggregators
+        self.slide_labels_map = slide_labels_map
         self.table_path = table_path + ".json"
 
         self.buffer: dict[str, list[Tensor]] = {"probs": [], "x": [], "y": []}
@@ -82,7 +84,10 @@ class AggregationCallback(MultiloaderLifecycle):
             "label": ds.slide["gleason_score"],
         }
 
-        label = ds.slide_label.to(pl_module.device).view(-1)
+        label = torch.tensor(
+            [self.slide_labels_map[ds.slide["gleason_score"]]],
+            device=pl_module.device,
+        )
 
         for name, aggr in self.aggregators.items():
             if isinstance(aggr, BinaryAggregator):

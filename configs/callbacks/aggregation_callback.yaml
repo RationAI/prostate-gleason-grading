@@ -1,4 +1,9 @@
 # @package callbacks.aggregation
 
+defaults:
+  - /datamodule/labels_maps@_global_._temp_labels_map: gs
+  - _self_
+
 _target_: ml.callbacks.AggregationCallback
 aggregators: ???
+slide_labels_map: ${_temp_labels_map.labels_map}
